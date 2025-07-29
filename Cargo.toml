@@ -1,0 +1,9 @@
+[package]
+name = "rust_vue_exercise"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tokio = { version = "1.47.0", features = ["full"] }
+rocket = { version = "0.5.1", features = ["json"] }
+maud = { version = "0.27.0", features = ["rocket"] }
