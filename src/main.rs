@@ -3,6 +3,7 @@ pub mod html_base;
 #[macro_use]
 extern crate rocket;
 
+use crate::html_base::IcoFile;
 use html_base::HtmlBuilder;
 use maud::{Markup, PreEscaped, html};
 use rocket::response::content::RawCss;
@@ -18,12 +19,15 @@ async fn root() -> Markup {
             div .container .main-content .mt-3 .px-4 .py-2 {
                 h1 .mt-3 { (title) }
                 p .mt-3 { "This is Rust Vue Exercise." }
+                h2 .mt-3 { "Exercise 1" }
                 div #app .mt-3 { "{{ message }}" }
+                h2 .mt-3 { "Exercise 2" }
                 div #counter .mt-3 {
                     button .btn .btn-primary "@click"="count++" {
                         "Count is: {{ count }}"
                     }
                 }
+                h2 .mt-3 { "Exercise 3" }
                 div #array .mt-3 {
                     ul {
                         li "v-for"="(item) in items" { "{{ item }}" }
@@ -52,8 +56,8 @@ async fn js_array() -> Value {
 }
 
 #[get("/favicon.ico")]
-async fn favicon() -> Box<[u8]> {
-    (*include_bytes!("_asset/favicon.ico")).into()
+async fn favicon() -> IcoFile<Box<[u8]>> {
+    IcoFile((*include_bytes!("_asset/favicon.ico")).into())
 }
 
 #[get("/main.css")]
