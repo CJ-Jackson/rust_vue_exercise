@@ -56,9 +56,11 @@ fn html_doc(title: &str, content: Markup, head: Markup, footer: Markup) -> Marku
         html {
             head {
                 meta charset="utf-8";
+                meta name="viewport" content="width=device-width, initial-scale=1";
                 title { (title) }
-                (head)
                 (bootstrap_head)
+                link rel="stylesheet" type="text/css" href="/main.css";
+                (head)
             }
             body {
                 (content)

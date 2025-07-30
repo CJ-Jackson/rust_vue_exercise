@@ -15,7 +15,7 @@ for item in Path('src').glob('**/_asset/*.js').__iter__():
     print(output)
 
 for item in Path('src').glob('**/_asset/*.css').__iter__():
-    if str(item).endswith('min.js'):
+    if str(item).endswith('min.css'):
         continue
     output = item.with_name(item.stem + '.min.css')
     subprocess.run(['minify', '-o', output, item])

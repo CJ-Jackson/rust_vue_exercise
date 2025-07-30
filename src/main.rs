@@ -5,6 +5,7 @@ extern crate rocket;
 
 use html_base::HtmlBuilder;
 use maud::{Markup, PreEscaped, html};
+use rocket::response::content::RawCss;
 use rocket::serde::json::Value;
 use rocket::serde::json::serde_json::json;
 
@@ -14,7 +15,7 @@ async fn root() -> Markup {
     HtmlBuilder::new(
         title.to_string(),
         html! {
-            div .container {
+            div .container .main-content .mt-3 .px-4 .py-2 {
                 h1 .mt-3 { (title) }
                 p .mt-3 { "This is Rust Vue Exercise." }
                 div #app .mt-3 { "{{ message }}" }
@@ -55,7 +56,16 @@ async fn favicon() -> Box<[u8]> {
     (*include_bytes!("_asset/favicon.ico")).into()
 }
 
+#[get("/main.css")]
+async fn main_css() -> RawCss<Box<[u8]>> {
+    #[cfg(debug_assertions)]
+    let css = *include_bytes!("_asset/main.css");
+    #[cfg(not(debug_assertions))]
+    let css = *include_bytes!("_asset/main.min.css");
+    RawCss(css.into())
+}
+
 #[launch]
 async fn rocket() -> _ {
-    rocket::build().mount("/", routes![root, js_array, favicon])
+    rocket::build().mount("/", routes![root, js_array, favicon, main_css])
 }
