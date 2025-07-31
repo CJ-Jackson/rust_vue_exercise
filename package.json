@@ -1,0 +1,9 @@
+{
+  "type": "module",
+  "devDependencies": {
+    "tailwindcss": "^4.1.11"
+  },
+  "imports": {
+    "#vue": "./asset/js/vue.esm-browser.js"
+  }
+}

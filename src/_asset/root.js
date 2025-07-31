@@ -1,4 +1,4 @@
-const { createApp, ref } = Vue;
+import {createApp, ref} from "vue";
 
 createApp({
     data() {

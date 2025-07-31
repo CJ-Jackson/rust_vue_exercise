@@ -16,20 +16,20 @@ async fn root() -> Markup {
     HtmlBuilder::new(
         title.to_string(),
         html! {
-            div .container .main-content .mt-3 .px-4 .py-2 {
+            div .container .main-content .mt-3 .px-7 .py-7 .mx-auto {
                 h1 .mt-3 { (title) }
                 p .mt-3 { "This is Rust Vue Exercise." }
                 h2 .mt-3 { "Exercise 1" }
                 div #app .mt-3 { "{{ message }}" }
                 h2 .mt-3 { "Exercise 2" }
                 div #counter .mt-3 {
-                    button .btn .btn-primary "@click"="count++" {
+                    button .sky-blue-button "@click"="count++" {
                         "Count is: {{ count }}"
                     }
                 }
                 h2 .mt-3 { "Exercise 3" }
                 div #array .mt-3 {
-                    ul {
+                    ul .ul-bullet {
                         li "v-for"="(item) in items" { "{{ item }}" }
                     }
                 }
@@ -46,7 +46,7 @@ fn root_js() -> Markup {
     #[cfg(not(debug_assertions))]
     let js = include_str!("_asset/root.min.js");
     html! {
-        script type="text/javascript" { (PreEscaped(js)) }
+        script type="module" { (PreEscaped(js)) }
     }
 }
 

@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@layer components {
+    h1 {
+        font-size: var(--text-2xl--line-height);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-gray-950);
+    }
+
+    h2 {
+        font-size: var(--text-xl);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-gray-950);
+    }
+
+    .sky-blue-button {
+        @apply bg-sky-500 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded
+    }
+
+    .ul-bullet {
+        list-style: disc;
+    }
+}
+
+body {
+    background: #709bdc;
+}
+
+.main-content {
+    background: #fff;
+    border-radius: 2em;
+}
