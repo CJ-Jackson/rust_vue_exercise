@@ -1,11 +1,13 @@
 pub mod content_type;
 pub mod html_base;
 pub mod icon;
+mod utils;
 
 #[macro_use]
 extern crate rocket;
 
 use crate::icon::plus_icon;
+use crate::utils::EmbedLastModified;
 use content_type::IcoFile;
 use html_base::HtmlBuilder;
 use maud::{Markup, PreEscaped, html};
@@ -60,17 +62,17 @@ async fn js_array() -> Value {
 }
 
 #[get("/favicon.ico")]
-async fn favicon() -> IcoFile<Box<[u8]>> {
-    IcoFile((*include_bytes!("_asset/favicon.ico")).into())
+async fn favicon() -> EmbedLastModified<IcoFile<Box<[u8]>>> {
+    EmbedLastModified::new(IcoFile((*include_bytes!("_asset/favicon.ico")).into()))
 }
 
 #[get("/main.css")]
-async fn main_css() -> RawCss<Box<[u8]>> {
+async fn main_css() -> EmbedLastModified<RawCss<Box<[u8]>>> {
     #[cfg(debug_assertions)]
     let css = *include_bytes!("_asset/main.css");
     #[cfg(not(debug_assertions))]
     let css = *include_bytes!("_asset/main.min.css");
-    RawCss(css.into())
+    EmbedLastModified::new(RawCss(css.into()))
 }
 
 #[launch]
