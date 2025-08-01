@@ -34,5 +34,4 @@ body {
 
 .main-content {
     @apply bg-white rounded dark:bg-gray-800 dark:text-white;
-    border-radius: 2em;
 }
