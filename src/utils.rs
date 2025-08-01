@@ -1,4 +1,3 @@
-use crate::status::NotModified;
 use rocket::Request;
 use rocket::http::{Header, Status};
 use rocket::request::{FromRequest, Outcome};
@@ -33,7 +32,7 @@ pub struct EtagCheck;
 
 #[rocket::async_trait]
 impl<'r> FromRequest<'r> for EtagCheck {
-    type Error = NotModified;
+    type Error = ();
 
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
         let etag = match option_env!("ETAG") {
@@ -45,9 +44,7 @@ impl<'r> FromRequest<'r> for EtagCheck {
 
         match req.headers().get_one("If-None-Match") {
             None => Outcome::Success(EtagCheck),
-            Some(req_etag) if req_etag == etag => {
-                Outcome::Error((Status::NotModified, NotModified("Etag Matched".to_string())))
-            }
+            Some(req_etag) if req_etag == etag => Outcome::Error((Status::NotModified, ())),
             Some(_) => Outcome::Success(EtagCheck),
         }
     }

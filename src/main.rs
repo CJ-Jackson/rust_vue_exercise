@@ -1,7 +1,6 @@
 pub mod content_type;
 pub mod html_base;
 pub mod icon;
-pub mod status;
 pub mod utils;
 
 #[macro_use]
