@@ -33,5 +33,5 @@ body {
 }
 
 .main-content {
-    @apply bg-white rounded dark:bg-gray-800 dark:text-white;
+    @apply bg-white rounded-2xl dark:bg-gray-800 dark:text-white;
 }
