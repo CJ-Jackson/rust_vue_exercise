@@ -1,11 +1,12 @@
+pub mod content_type;
 pub mod html_base;
 pub mod icon;
 
 #[macro_use]
 extern crate rocket;
 
-use crate::html_base::IcoFile;
 use crate::icon::plus_icon;
+use content_type::IcoFile;
 use html_base::HtmlBuilder;
 use maud::{Markup, PreEscaped, html};
 use rocket::response::content::RawCss;
