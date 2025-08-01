@@ -20,10 +20,3 @@ for item in Path('src').glob('**/_asset/*.json').__iter__():
     output = item.with_name(item.stem + '.min.json')
     subprocess.run(['minify', '-o', output, item])
     print(output)
-
-for item in Path('src').glob('**/_asset/*.css').__iter__():
-    if str(item).endswith('min.css'):
-        continue
-    output = item.with_name(item.stem + '.min.css')
-    subprocess.run(['minify', '-o', output, item])
-    print(output)
