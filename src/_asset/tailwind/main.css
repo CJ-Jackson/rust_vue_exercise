@@ -4,17 +4,23 @@
     h1 {
         font-size: var(--text-2xl--line-height);
         font-weight: var(--font-weight-semibold);
-        color: var(--color-gray-950);
     }
 
     h2 {
         font-size: var(--text-xl);
         font-weight: var(--font-weight-semibold);
-        color: var(--color-gray-950);
     }
 
-    .sky-blue-button {
-        @apply bg-sky-500 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded
+    .btn {
+        @apply flex font-bold py-2 px-4 rounded justify-center items-center;
+
+        svg {
+            @apply inline-block max-h-4 max-w-4 ml-1;
+        }
+    }
+
+    .btn-sky-blue {
+        @apply bg-sky-500 hover:bg-sky-700 text-white;
     }
 
     .ul-bullet {
@@ -23,10 +29,10 @@
 }
 
 body {
-    background: #709bdc;
+    @apply bg-blue-400 dark:bg-blue-950;
 }
 
 .main-content {
-    background: #fff;
+    @apply bg-white rounded dark:bg-gray-800 dark:text-white;
     border-radius: 2em;
 }

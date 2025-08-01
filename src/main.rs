@@ -1,9 +1,11 @@
 pub mod html_base;
+pub mod icon;
 
 #[macro_use]
 extern crate rocket;
 
 use crate::html_base::IcoFile;
+use crate::icon::plus_icon;
 use html_base::HtmlBuilder;
 use maud::{Markup, PreEscaped, html};
 use rocket::response::content::RawCss;
@@ -23,8 +25,9 @@ async fn root() -> Markup {
                 div #app .mt-3 { "{{ message }}" }
                 h2 .mt-3 { "Exercise 2" }
                 div #counter .mt-3 {
-                    button .sky-blue-button "@click"="count++" {
-                        "Count is: {{ count }}"
+                    button .btn .btn-sky-blue "@click"="count++" {
+                        "Count is: {{ count }}  "
+                        (plus_icon())
                     }
                 }
                 h2 .mt-3 { "Exercise 3" }
