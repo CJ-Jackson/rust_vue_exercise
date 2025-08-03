@@ -1,4 +1,10 @@
+use crate::html_base::HtmlBuilder;
 use error_stack::{Context, Report, ResultExt};
+use maud::{PreEscaped, html};
+use rocket::http::Status;
+use rocket::response::Responder;
+use rocket::serde::json::serde_json::json;
+use rocket::{Request, Response};
 use std::error::Error;
 use thiserror::Error;
 
@@ -129,6 +135,69 @@ where
             Err(report) => {
                 let context = context(&report);
                 Err(report.change_context(context))
+            }
+        }
+    }
+}
+
+pub trait ErrorStatus: Error + Sized + Send + Sync + 'static {
+    fn error_status(&self) -> Status;
+}
+
+pub enum ErrorOutput {
+    Json,
+    Html,
+}
+
+pub struct ErrorReportResponse<E>(pub Report<E>)
+where
+    E: ErrorStatus;
+
+impl<'r, E> Responder<'r, 'static> for ErrorReportResponse<E>
+where
+    E: ErrorStatus,
+{
+    fn respond_to(self, request: &'r Request<'_>) -> rocket::response::Result<'static> {
+        let status = self.0.current_context().error_status();
+
+        let pre = if cfg!(debug_assertions) {
+            format!("{:?}", self.0)
+        } else {
+            format!("{:#}", self.0)
+        };
+
+        let title = format!("Error: {}", &status.to_string());
+
+        match self.0.downcast_ref::<ErrorOutput>() {
+            None | Some(ErrorOutput::Html) => {
+                let html = HtmlBuilder::new(
+                    title.clone(),
+                    html! {
+                        div .container .main-content .mt-3 .px-7 .py-7 .mx-auto {
+                            h1 .mt-3 { (title) }
+                            pre .mt-3 { (PreEscaped(pre)) }
+                        }
+                    },
+                )
+                .build()
+                .into_string();
+
+                Response::build_from(html.respond_to(request)?)
+                    .status(status)
+                    .header(rocket::http::ContentType::HTML)
+                    .ok()
+            }
+            Some(ErrorOutput::Json) => {
+                let json = json!({
+                    "title": title,
+                    "message": pre,
+                })
+                .to_string();
+
+                Response::build_from(json.respond_to(request)?)
+                    .status(status)
+                    .header(rocket::http::ContentType::JSON)
+                    .ok()
             }
         }
     }

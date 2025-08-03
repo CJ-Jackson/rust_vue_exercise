@@ -35,3 +35,19 @@ body {
 .main-content {
     @apply bg-white rounded-2xl dark:bg-gray-800 dark:text-white;
 }
+
+.bucket-list-item, .bucket-list-header, .bucket-form {
+    @apply flex mb-1;
+
+    .bucket-list-col {
+        @apply flex-1 mx-1;
+    }
+}
+
+.bucket-list-header {
+    @apply font-bold;
+}
+
+.bucket-form input {
+    @apply border border-gray-200 p-3 rounded-2xl;
+}

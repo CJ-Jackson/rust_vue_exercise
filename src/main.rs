@@ -1,3 +1,4 @@
+pub mod bucket_list;
 pub mod config;
 pub mod content_type;
 pub mod db;
@@ -10,6 +11,7 @@ pub mod utils;
 #[macro_use]
 extern crate rocket;
 
+use crate::bucket_list::route::BucketListRoute;
 use crate::config::get_figment_for_rocket;
 use crate::dep_context::DepContext;
 use crate::icon::plus_icon;
@@ -85,5 +87,6 @@ async fn main_css(_etag: EtagCheck) -> EmbedEtag<RawCss<Box<[u8]>>> {
 async fn rocket() -> _ {
     rocket::custom(get_figment_for_rocket())
         .attach(DepContext::adhoc())
+        .attach(BucketListRoute::adhoc())
         .mount("/", routes![root, js_array, favicon, main_css])
 }

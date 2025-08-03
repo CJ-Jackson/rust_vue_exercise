@@ -1,0 +1,44 @@
+import {createApp, ref} from "vue";
+
+createApp({
+    data() {
+        return {
+            bucket_list: [],
+            input_name: "",
+            input_description: "",
+        }
+    },
+    methods: {
+        getBucketList() {
+            fetch('/bucket_list/all')
+                .then(res => res.json())
+                .then(data => this.bucket_list = data);
+        },
+        addToBucketList() {
+            if (this.input_name === "" || this.input_description === "") {
+                alert('Please fill in the required fields');
+                return;
+            }
+            let json = {
+                name: this.input_name,
+                description: this.input_description
+            }
+            fetch('/bucket_list/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(json)
+            }).then(res => {
+                if (res.status === 200) {
+                    this.getBucketList();
+                    this.input_name = "";
+                    this.input_description = "";
+                }
+            })
+        }
+    },
+    mounted() {
+        this.getBucketList()
+    },
+}).mount('#bucket-list');

@@ -4,10 +4,8 @@ use rocket::fairing::AdHoc;
 use std::sync::Arc;
 
 pub struct DepContext {
-    #[allow(dead_code)]
-    config: Arc<Config>,
-    #[allow(dead_code)]
-    sqlite_client: SqliteClient,
+    pub config: Arc<Config>,
+    pub sqlite_client: SqliteClient,
 }
 
 impl DepContext {
