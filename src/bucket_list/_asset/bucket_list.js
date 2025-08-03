@@ -1,4 +1,4 @@
-import {createApp, ref} from "vue";
+import {createApp} from "vue";
 
 createApp({
     data() {
@@ -12,7 +12,12 @@ createApp({
         getBucketList() {
             fetch('/bucket_list/all')
                 .then(res => res.json())
-                .then(data => this.bucket_list = data);
+                .then(data => {
+                    this.bucket_list = data
+                    this.bucket_list.forEach(item => {
+                        item.timestamp = new Date(item.timestamp).toLocaleString();
+                    })
+                });
         },
         addToBucketList() {
             if (this.input_name === "" || this.input_description === "") {
