@@ -1,3 +1,4 @@
+pub mod config;
 pub mod content_type;
 pub mod html_base;
 pub mod icon;
@@ -6,6 +7,7 @@ pub mod utils;
 #[macro_use]
 extern crate rocket;
 
+use crate::config::get_figment_for_rocket;
 use crate::icon::plus_icon;
 use crate::utils::{EmbedEtag, EtagCheck};
 use content_type::IcoFile;
@@ -77,5 +79,5 @@ async fn main_css(_etag: EtagCheck) -> EmbedEtag<RawCss<Box<[u8]>>> {
 
 #[launch]
 async fn rocket() -> _ {
-    rocket::build().mount("/", routes![root, js_array, favicon, main_css])
+    rocket::custom(get_figment_for_rocket()).mount("/", routes![root, js_array, favicon, main_css])
 }

@@ -986,6 +986,7 @@ dependencies = [
 name = "rust_vue_exercise"
 version = "0.1.0"
 dependencies = [
+ "figment",
  "maud",
  "rocket",
  "tokio",
