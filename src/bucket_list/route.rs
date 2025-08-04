@@ -18,7 +18,7 @@ pub async fn main_bucket_list() -> Markup {
         html! {
             div .container .main-content .mt-3 .px-7 .py-7 .mx-auto {
                 h1 .mt-3 { (title) }
-                div #bucket-list .mt-3 {
+                div #bucket-list .mt-3 v-cloak {
                     div .bucket-list-header {
                         span .bucket-list-col { "ID" }
                         span .bucket-list-col { "Name" }

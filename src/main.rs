@@ -33,16 +33,16 @@ async fn root() -> Markup {
                 h1 .mt-3 { (title) }
                 p .mt-3 { "This is Rust Vue Exercise." }
                 h2 .mt-3 { "Exercise 1" }
-                div #app .mt-3 { "{{ message }}" }
+                div #app .mt-3 v-cloak { "{{ message }}" }
                 h2 .mt-3 { "Exercise 2" }
-                div #counter .mt-3 {
+                div #counter .mt-3 v-cloak {
                     button .btn .btn-sky-blue "@click"="count++" {
                         "Count is: {{ count }}  "
                         (plus_icon())
                     }
                 }
                 h2 .mt-3 { "Exercise 3" }
-                div #array .mt-3 {
+                div #array .mt-3 v-cloak {
                     ul .ul-bullet {
                         li "v-for"="(item) in items" { "{{ item }}" }
                     }

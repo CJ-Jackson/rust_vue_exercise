@@ -28,6 +28,10 @@
     }
 }
 
+[v-cloak] {
+    display: none;
+}
+
 body {
     @apply bg-blue-400 dark:bg-blue-950;
 }

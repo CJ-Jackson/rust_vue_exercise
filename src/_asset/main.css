@@ -249,6 +249,9 @@
     list-style: disc;
   }
 }
+[v-cloak] {
+  display: none;
+}
 body {
   background-color: var(--color-blue-400);
   @media (prefers-color-scheme: dark) {
