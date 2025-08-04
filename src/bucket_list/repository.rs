@@ -59,10 +59,12 @@ impl BucketListRepository {
             })
             .change_context(BucketListRepositoryError::RowValueError)?;
 
-        Ok(item_iter
-            .filter(|item| item.is_ok())
-            .map(|item| item.unwrap())
-            .collect())
+        let mut items: Vec<BucketListItem> = Vec::new();
+        for item in item_iter {
+            items.push(item.change_context(BucketListRepositoryError::RowValueError)?);
+        }
+
+        Ok(items.into())
     }
 
     pub fn add_to_bucket_list(
