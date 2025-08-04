@@ -163,7 +163,7 @@ where
         let pre = if cfg!(debug_assertions) {
             format!("{:?}", self.0)
         } else {
-            format!("{:#}", self.0)
+            format!("{}", self.0)
         };
 
         let title = format!("Error: {}", &status.to_string());
