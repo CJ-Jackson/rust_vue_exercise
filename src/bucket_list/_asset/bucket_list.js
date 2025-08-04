@@ -14,10 +14,13 @@ createApp({
                 .then(res => res.json())
                 .then(data => {
                     this.bucket_list = data;
-                    this.bucket_list.forEach(item => {
-                        item.timestamp = new Date(item.timestamp).toLocaleString();
-                    });
+                    this.formatDate();
                 });
+        },
+        formatDate() {
+            this.bucket_list.forEach(item => {
+                item.timestamp = new Date(item.timestamp).toLocaleString();
+            });
         },
         addToBucketList() {
             if (this.input_name === "" || this.input_description === "") {
