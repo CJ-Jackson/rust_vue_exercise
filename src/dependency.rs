@@ -73,9 +73,10 @@ where
     }
 }
 
-impl<T> Deref for DependencyGuard<T>
+impl<T, F> Deref for DependencyGuard<T, F>
 where
     T: FromDepContext,
+    F: DepFeatureFlag,
 {
     type Target = T;
 
