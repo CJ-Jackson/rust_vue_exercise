@@ -24,10 +24,6 @@ createApp({
             });
         },
         addToBucketList() {
-            if (this.input_name === "" || this.input_description === "") {
-                alert('Please fill in the required fields');
-                return;
-            }
             let json = {
                 name: this.input_name,
                 description: this.input_description
