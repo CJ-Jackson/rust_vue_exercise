@@ -27,10 +27,8 @@ pub struct BucketListRepository {
 }
 
 impl BucketListRepository {
-    pub fn new(dep_context: &DepContext) -> Self {
-        Self {
-            sqlite_client: dep_context.sqlite_client.clone(),
-        }
+    pub fn new(sqlite_client: SqliteClient) -> Self {
+        Self { sqlite_client }
     }
 
     pub fn get_all_from_bucket_list(
@@ -87,6 +85,6 @@ impl BucketListRepository {
 
 impl FromDepContext for BucketListRepository {
     fn from_dep_context(dep_context: &DepContext, _feature_flag: String) -> Self {
-        Self::new(dep_context)
+        Self::new(dep_context.sqlite_client.clone())
     }
 }
