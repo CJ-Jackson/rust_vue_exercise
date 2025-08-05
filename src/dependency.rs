@@ -47,15 +47,15 @@ pub trait FromDepContext {
     fn from_dep_context(dep_context: &DepContext, feature_flag: String) -> Self;
 }
 
-pub struct DepContextGuard<T, E = DefaultFeatureFlag>(pub T, PhantomData<E>)
+pub struct DependencyGuard<T, E = DefaultFeatureFlag>(pub T, PhantomData<E>)
 where
     T: FromDepContext,
     E: DepFeatureFlag;
 
-pub type Dep<T, E = DefaultFeatureFlag> = DepContextGuard<T, E>;
+pub type Dep<T, E = DefaultFeatureFlag> = DependencyGuard<T, E>;
 
 #[rocket::async_trait]
-impl<'r, T, E> FromRequest<'r> for DepContextGuard<T, E>
+impl<'r, T, E> FromRequest<'r> for DependencyGuard<T, E>
 where
     T: FromDepContext,
     E: DepFeatureFlag,
@@ -73,7 +73,7 @@ where
     }
 }
 
-impl<T> Deref for DepContextGuard<T>
+impl<T> Deref for DependencyGuard<T>
 where
     T: FromDepContext,
 {

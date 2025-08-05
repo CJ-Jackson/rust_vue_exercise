@@ -2,7 +2,7 @@ pub mod bucket_list;
 pub mod config;
 pub mod content_type;
 pub mod db;
-pub mod dep_context;
+pub mod dependency;
 pub mod error;
 pub mod html_base;
 pub mod icon;
@@ -14,7 +14,7 @@ extern crate rocket;
 
 use crate::bucket_list::route::BucketListRoute;
 use crate::config::get_figment_for_rocket;
-use crate::dep_context::DepContext;
+use crate::dependency::DepContext;
 use crate::icon::plus_icon;
 use crate::utils::{EmbedEtag, EtagCheck};
 use content_type::IcoFile;

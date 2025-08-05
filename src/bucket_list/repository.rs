@@ -1,6 +1,6 @@
 use crate::bucket_list::model::{AddToBucketList, BucketListItem};
 use crate::db::SqliteClient;
-use crate::dep_context::{DepContext, FromDepContext};
+use crate::dependency::{DepContext, FromDepContext};
 use crate::error::ErrorStatus;
 use error_stack::{Report, ResultExt};
 use rocket::http::Status;

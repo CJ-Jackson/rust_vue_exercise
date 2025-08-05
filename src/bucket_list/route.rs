@@ -1,7 +1,7 @@
 use crate::bucket_list::model::{AddToBucketList, BucketListItem};
 use crate::bucket_list::repository::{BucketListRepository, BucketListRepositoryError};
 use crate::bucket_list::validate::validate_add_to_bucket_list;
-use crate::dep_context::Dep;
+use crate::dependency::Dep;
 use crate::error::{ErrorOutput, ErrorReportResponse};
 use crate::html_base::HtmlBuilder;
 use crate::icon::plus_icon;
