@@ -1,6 +1,10 @@
 use crate::config::{Config, get_figment_for_other};
 use crate::db::SqliteClient;
+use rocket::Request;
 use rocket::fairing::AdHoc;
+use rocket::http::Status;
+use rocket::request::{FromRequest, Outcome};
+use std::ops::Deref;
 use std::sync::Arc;
 
 pub struct DepContext {
@@ -25,5 +29,43 @@ impl DepContext {
 
             rocket.manage(dep_context)
         })
+    }
+}
+
+pub trait FromDepContext {
+    fn from_dep_context(dep_context: &DepContext) -> Self;
+}
+
+pub struct DepContextGuard<T>(pub T)
+where
+    T: FromDepContext;
+
+pub type Dep<T> = DepContextGuard<T>;
+
+#[rocket::async_trait]
+impl<'r, T> FromRequest<'r> for DepContextGuard<T>
+where
+    T: FromDepContext,
+{
+    type Error = ();
+
+    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        match req.rocket().state::<DepContext>() {
+            None => Outcome::Error((Status::InternalServerError, ())),
+            Some(dep_context) => {
+                Outcome::Success(DepContextGuard(T::from_dep_context(dep_context)))
+            }
+        }
+    }
+}
+
+impl<T> Deref for DepContextGuard<T>
+where
+    T: FromDepContext,
+{
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }

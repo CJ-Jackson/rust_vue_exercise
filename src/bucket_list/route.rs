@@ -1,6 +1,7 @@
 use crate::bucket_list::model::{AddToBucketList, BucketListItem};
 use crate::bucket_list::repository::{BucketListRepository, BucketListRepositoryError};
 use crate::bucket_list::validate::validate_add_to_bucket_list;
+use crate::dep_context::Dep;
 use crate::error::{ErrorOutput, ErrorReportResponse};
 use crate::html_base::HtmlBuilder;
 use crate::icon::plus_icon;
@@ -76,7 +77,7 @@ pub fn get_bucket_list_js() -> Markup {
 
 #[get("/all")]
 pub async fn all_bucket_list(
-    repo: BucketListRepository,
+    repo: Dep<BucketListRepository>,
 ) -> Result<Json<Box<[BucketListItem]>>, ErrorReportResponse<BucketListRepositoryError>> {
     let items = repo
         .get_all_from_bucket_list()
@@ -95,7 +96,7 @@ pub enum AddBucketListRouteError {
 #[post("/add", data = "<data>")]
 pub async fn add_bucket_list(
     data: Json<AddToBucketList>,
-    repo: BucketListRepository,
+    repo: Dep<BucketListRepository>,
 ) -> Result<Value, AddBucketListRouteError> {
     validate_add_to_bucket_list(&data.0).map_err(|e| AddBucketListRouteError::Validate(e))?;
 

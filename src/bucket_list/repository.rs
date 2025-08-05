@@ -1,11 +1,9 @@
 use crate::bucket_list::model::{AddToBucketList, BucketListItem};
 use crate::db::SqliteClient;
-use crate::dep_context::DepContext;
+use crate::dep_context::{DepContext, FromDepContext};
 use crate::error::ErrorStatus;
 use error_stack::{Report, ResultExt};
-use rocket::Request;
 use rocket::http::Status;
-use rocket::request::{FromRequest, Outcome};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -87,14 +85,8 @@ impl BucketListRepository {
     }
 }
 
-#[rocket::async_trait]
-impl<'r> FromRequest<'r> for BucketListRepository {
-    type Error = ();
-
-    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
-        match req.rocket().state::<DepContext>() {
-            None => Outcome::Error((Status::InternalServerError, ())),
-            Some(dep_context) => Outcome::Success(BucketListRepository::new(dep_context)),
-        }
+impl FromDepContext for BucketListRepository {
+    fn from_dep_context(dep_context: &DepContext) -> Self {
+        Self::new(dep_context)
     }
 }
