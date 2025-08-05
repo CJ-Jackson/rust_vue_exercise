@@ -1,8 +1,10 @@
 use crate::bucket_list::model::{AddToBucketList, BucketListItem};
 use crate::bucket_list::repository::{BucketListRepository, BucketListRepositoryError};
+use crate::bucket_list::validate::validate_add_to_bucket_list;
 use crate::error::{ErrorOutput, ErrorReportResponse};
 use crate::html_base::HtmlBuilder;
 use crate::icon::plus_icon;
+use crate::validation::ValidationErrorResponse;
 use error_stack::ResultExt;
 use maud::{Markup, PreEscaped, html};
 use rocket::fairing::AdHoc;
@@ -41,6 +43,19 @@ pub async fn main_bucket_list() -> Markup {
                             (plus_icon())
                         }
                     }
+                    div .bucket-form-error "v-if"="error" {
+                        span .bucket-list-col {
+                            ul {
+                                li "v-for"="message in error.name" { "{{ message }}" }
+                            }
+                        }
+                        span .bucket-list-col {
+                            ul {
+                                li "v-for"="message in error.description" { "{{ message }}" }
+                            }
+                        }
+                        span .bucket-list-col {}
+                    }
                 }
             }
         },
@@ -71,14 +86,22 @@ pub async fn all_bucket_list(
     Ok(Json(items))
 }
 
+#[derive(Responder)]
+pub enum AddBucketListRouteError {
+    Repo(ErrorReportResponse<BucketListRepositoryError>),
+    Validate(ValidationErrorResponse),
+}
+
 #[post("/add", data = "<data>")]
 pub async fn add_bucket_list(
     data: Json<AddToBucketList>,
     repo: BucketListRepository,
-) -> Result<Value, ErrorReportResponse<BucketListRepositoryError>> {
+) -> Result<Value, AddBucketListRouteError> {
+    validate_add_to_bucket_list(&data.0).map_err(|e| AddBucketListRouteError::Validate(e))?;
+
     repo.add_to_bucket_list(&data.0)
         .attach(ErrorOutput::Json)
-        .map_err(|e| ErrorReportResponse(e))?;
+        .map_err(|e| AddBucketListRouteError::Repo(ErrorReportResponse(e)))?;
 
     Ok(json!({"message": "success"}))
 }

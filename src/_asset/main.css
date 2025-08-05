@@ -7,6 +7,7 @@
       "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
       "Courier New", monospace;
+    --color-red-500: oklch(63.7% 0.237 25.331);
     --color-sky-500: oklch(68.5% 0.169 237.323);
     --color-sky-700: oklch(50% 0.134 242.749);
     --color-blue-400: oklch(70.7% 0.165 254.624);
@@ -268,7 +269,7 @@ body {
     color: var(--color-white);
   }
 }
-.bucket-list-item, .bucket-list-header, .bucket-form {
+.bucket-list-item, .bucket-list-header, .bucket-form, .bucket-form-error {
   margin-bottom: calc(var(--spacing) * 1);
   display: flex;
   .bucket-list-col {
@@ -286,6 +287,9 @@ body {
   border-width: 1px;
   border-color: var(--color-gray-200);
   padding: calc(var(--spacing) * 3);
+}
+.bucket-form-error {
+  color: var(--color-red-500);
 }
 @property --tw-font-weight {
   syntax: "*";

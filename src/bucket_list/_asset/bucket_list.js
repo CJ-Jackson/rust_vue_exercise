@@ -6,6 +6,7 @@ createApp({
             bucket_list: [],
             input_name: "",
             input_description: "",
+            error: false,
         }
     },
     methods: {
@@ -42,6 +43,16 @@ createApp({
                     this.getBucketList();
                     this.input_name = "";
                     this.input_description = "";
+                    this.error = false;
+                } else if (res.status === 422) {
+                    let content = res.json();
+                    content.then(data => {
+                        let sorted = {};
+                        for (let key in data) {
+                            sorted[data[key].field_name] = data[key].messages;
+                        }
+                        this.error = sorted;
+                    });
                 }
             })
         }

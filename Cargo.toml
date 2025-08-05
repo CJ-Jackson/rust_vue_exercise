@@ -13,3 +13,4 @@ figment = { version = "0.10.19", features = ["toml"] }
 chrono = { version = "0.4.41", features = ["serde"] }
 rusqlite = { version = "0.37.0", features = ["chrono"] }
 serde = { version = "1.0.219", features = ["derive", "rc"] }
+unicode-segmentation = "1.12.0"

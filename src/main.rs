@@ -7,6 +7,7 @@ pub mod error;
 pub mod html_base;
 pub mod icon;
 pub mod utils;
+pub mod validation;
 
 #[macro_use]
 extern crate rocket;

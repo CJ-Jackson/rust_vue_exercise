@@ -40,7 +40,7 @@ body {
     @apply bg-white rounded-2xl dark:bg-gray-800 dark:text-white;
 }
 
-.bucket-list-item, .bucket-list-header, .bucket-form {
+.bucket-list-item, .bucket-list-header, .bucket-form, .bucket-form-error {
     @apply flex mb-1;
 
     .bucket-list-col {
@@ -54,4 +54,8 @@ body {
 
 .bucket-form input {
     @apply border border-gray-200 p-3 rounded-2xl;
+}
+
+.bucket-form-error {
+    @apply text-red-500;
 }
