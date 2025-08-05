@@ -47,18 +47,18 @@ pub trait FromDepContext {
     fn from_dep_context(dep_context: &DepContext, feature_flag: String) -> Self;
 }
 
-pub struct DependencyGuard<T, E = DefaultFeatureFlag>(pub T, PhantomData<E>)
+pub struct DependencyGuard<T, F = DefaultFeatureFlag>(pub T, PhantomData<F>)
 where
     T: FromDepContext,
-    E: DepFeatureFlag;
+    F: DepFeatureFlag;
 
-pub type Dep<T, E = DefaultFeatureFlag> = DependencyGuard<T, E>;
+pub type Dep<T, F = DefaultFeatureFlag> = DependencyGuard<T, F>;
 
 #[rocket::async_trait]
-impl<'r, T, E> FromRequest<'r> for DependencyGuard<T, E>
+impl<'r, T, F> FromRequest<'r> for DependencyGuard<T, F>
 where
     T: FromDepContext,
-    E: DepFeatureFlag,
+    F: DepFeatureFlag,
 {
     type Error = ();
 
@@ -66,7 +66,7 @@ where
         match req.rocket().state::<DepContext>() {
             None => Outcome::Error((Status::InternalServerError, ())),
             Some(dep_context) => Outcome::Success(Self(
-                T::from_dep_context(dep_context, E::FEATURE_FLAG.to_string()),
+                T::from_dep_context(dep_context, F::FEATURE_FLAG.to_string()),
                 PhantomData,
             )),
         }
