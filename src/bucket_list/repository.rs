@@ -86,7 +86,7 @@ impl BucketListRepository {
 }
 
 impl FromDepContext for BucketListRepository {
-    fn from_dep_context(dep_context: &DepContext) -> Self {
+    fn from_dep_context(dep_context: &DepContext, _feature_flag: String) -> Self {
         Self::new(dep_context)
     }
 }

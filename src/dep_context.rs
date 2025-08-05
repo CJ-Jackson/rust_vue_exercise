@@ -4,6 +4,7 @@ use rocket::Request;
 use rocket::fairing::AdHoc;
 use rocket::http::Status;
 use rocket::request::{FromRequest, Outcome};
+use std::marker::PhantomData;
 use std::ops::Deref;
 use std::sync::Arc;
 
@@ -32,27 +33,42 @@ impl DepContext {
     }
 }
 
-pub trait FromDepContext {
-    fn from_dep_context(dep_context: &DepContext) -> Self;
+pub trait DepFeatureFlag {
+    const FEATURE_FLAG: &'static str;
 }
 
-pub struct DepContextGuard<T>(pub T)
-where
-    T: FromDepContext;
+pub struct DefaultFeatureFlag;
 
-pub type Dep<T> = DepContextGuard<T>;
+impl DepFeatureFlag for DefaultFeatureFlag {
+    const FEATURE_FLAG: &'static str = "default";
+}
 
-#[rocket::async_trait]
-impl<'r, T> FromRequest<'r> for DepContextGuard<T>
+pub trait FromDepContext {
+    fn from_dep_context(dep_context: &DepContext, feature_flag: String) -> Self;
+}
+
+pub struct DepContextGuard<T, E = DefaultFeatureFlag>(pub T, PhantomData<E>)
 where
     T: FromDepContext,
+    E: DepFeatureFlag;
+
+pub type Dep<T, E = DefaultFeatureFlag> = DepContextGuard<T, E>;
+
+#[rocket::async_trait]
+impl<'r, T, E> FromRequest<'r> for DepContextGuard<T, E>
+where
+    T: FromDepContext,
+    E: DepFeatureFlag,
 {
     type Error = ();
 
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
         match req.rocket().state::<DepContext>() {
             None => Outcome::Error((Status::InternalServerError, ())),
-            Some(dep_context) => Outcome::Success(Self(T::from_dep_context(dep_context))),
+            Some(dep_context) => Outcome::Success(Self(
+                T::from_dep_context(dep_context, E::FEATURE_FLAG.to_string()),
+                PhantomData,
+            )),
         }
     }
 }
