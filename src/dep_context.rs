@@ -52,9 +52,7 @@ where
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
         match req.rocket().state::<DepContext>() {
             None => Outcome::Error((Status::InternalServerError, ())),
-            Some(dep_context) => {
-                Outcome::Success(DepContextGuard(T::from_dep_context(dep_context)))
-            }
+            Some(dep_context) => Outcome::Success(Self(T::from_dep_context(dep_context))),
         }
     }
 }
