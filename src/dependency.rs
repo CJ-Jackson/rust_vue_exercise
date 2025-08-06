@@ -43,6 +43,8 @@ impl DepContext {
 pub trait DependencyFlag {
     const FEATURE_FLAG: &'static str = "default";
     const USE_FORWARD: bool = false;
+    const ALLOW_USER: bool = true;
+    const ALLOW_VISITOR: bool = true;
 
     fn feature_flag() -> String {
         Self::FEATURE_FLAG.to_string()
@@ -50,6 +52,14 @@ pub trait DependencyFlag {
 
     fn use_forward() -> bool {
         Self::USE_FORWARD
+    }
+
+    fn allow_user() -> bool {
+        Self::ALLOW_USER
+    }
+
+    fn allow_visitor() -> bool {
+        Self::ALLOW_VISITOR
     }
 }
 
