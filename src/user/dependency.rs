@@ -32,24 +32,30 @@ where
     type Error = ();
 
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
-        let user_service =
-            if let Outcome::Success(user_service) = req.guard::<Dep<UserCheckService>>().await {
-                user_service
-            } else {
+        let user_context = req
+            .local_cache_async(async {
+                let user_service = req.guard::<Dep<UserCheckService>>().await.succeeded()?;
+
+                Some(Arc::new(user_service.get_user_context()))
+            })
+            .await;
+
+        let user_context = match user_context {
+            None => {
                 return if F::use_forward() {
                     Outcome::Forward(Status::InternalServerError)
                 } else {
                     Outcome::Error((Status::InternalServerError, ()))
                 };
-            };
-
-        let user_context = Arc::new(user_service.get_user_context());
+            }
+            Some(user_context) => Arc::clone(user_context),
+        };
 
         if user_context.is_user && !F::allow_user() {
             return if F::use_forward() {
-                Outcome::Forward(Status::Forbidden)
+                Outcome::Forward(Status::Unauthorized)
             } else {
-                Outcome::Error((Status::Forbidden, ()))
+                Outcome::Error((Status::Unauthorized, ()))
             };
         } else if !user_context.is_user && !F::allow_visitor() {
             return if F::use_forward() {
