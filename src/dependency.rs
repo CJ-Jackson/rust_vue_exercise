@@ -7,6 +7,13 @@ use rocket::request::{FromRequest, Outcome};
 use std::marker::PhantomData;
 use std::ops::Deref;
 use std::sync::Arc;
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum DependencyError {
+    #[error("Needs request")]
+    NeedsRequest,
+}
 
 pub struct DepContext {
     pub config: Arc<Config>,
@@ -35,14 +42,27 @@ impl DepContext {
 
 pub trait DependencyFlag {
     const FEATURE_FLAG: &'static str = "default";
+    const USE_FORWARD: bool = false;
+
+    fn feature_flag() -> String {
+        Self::FEATURE_FLAG.to_string()
+    }
+
+    fn use_forward() -> bool {
+        Self::USE_FORWARD
+    }
 }
 
 pub struct DefaultFlag;
 
 impl DependencyFlag for DefaultFlag {}
 
-pub trait FromDepContext {
-    fn from_dep_context(dep_context: &DepContext, feature_flag: String) -> Self;
+pub trait FromDepContext: Sized {
+    fn from_dep_context<'r>(
+        dep_context: &DepContext,
+        feature_flag: String,
+        request: Option<&'r Request<'_>>,
+    ) -> Result<Self, DependencyError>;
 }
 
 pub struct DependencyGuard<T, F = DefaultFlag>(pub T, PhantomData<F>)
@@ -62,11 +82,25 @@ where
 
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
         match req.rocket().state::<DepContext>() {
-            None => Outcome::Error((Status::InternalServerError, ())),
-            Some(dep_context) => Outcome::Success(Self(
-                T::from_dep_context(dep_context, F::FEATURE_FLAG.to_string()),
-                PhantomData,
-            )),
+            None => {
+                if F::use_forward() {
+                    Outcome::Forward(Status::InternalServerError)
+                } else {
+                    Outcome::Error((Status::InternalServerError, ()))
+                }
+            }
+            Some(dep_context) => {
+                match T::from_dep_context(dep_context, F::feature_flag(), Some(req)) {
+                    Ok(dep) => Outcome::Success(Self(dep, PhantomData)),
+                    Err(_) => {
+                        if F::use_forward() {
+                            Outcome::Forward(Status::InternalServerError)
+                        } else {
+                            Outcome::Error((Status::InternalServerError, ()))
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -80,5 +114,26 @@ where
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct DifferentFlag;
+
+    impl DependencyFlag for DifferentFlag {
+        const FEATURE_FLAG: &'static str = "different";
+        const USE_FORWARD: bool = true;
+    }
+
+    #[test]
+    fn flags() {
+        assert_eq!(DefaultFlag::feature_flag(), "default");
+        assert_eq!(DefaultFlag::use_forward(), false);
+
+        assert_eq!(DifferentFlag::feature_flag(), "different");
+        assert_eq!(DifferentFlag::use_forward(), true);
     }
 }

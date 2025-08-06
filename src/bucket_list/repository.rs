@@ -1,8 +1,9 @@
 use crate::bucket_list::model::{AddToBucketList, BucketListItem};
 use crate::db::SqliteClient;
-use crate::dependency::{DepContext, FromDepContext};
+use crate::dependency::{DepContext, DependencyError, FromDepContext};
 use crate::error::ErrorStatus;
 use error_stack::{Report, ResultExt};
+use rocket::Request;
 use rocket::http::Status;
 use thiserror::Error;
 
@@ -84,7 +85,11 @@ impl BucketListRepository {
 }
 
 impl FromDepContext for BucketListRepository {
-    fn from_dep_context(dep_context: &DepContext, _feature_flag: String) -> Self {
-        Self::new(dep_context.sqlite_client.clone())
+    fn from_dep_context(
+        dep_context: &DepContext,
+        _feature_flag: String,
+        _request: Option<&Request>,
+    ) -> Result<Self, DependencyError> {
+        Ok(Self::new(dep_context.sqlite_client.clone()))
     }
 }
