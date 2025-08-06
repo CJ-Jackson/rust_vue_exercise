@@ -33,32 +33,30 @@ impl DepContext {
     }
 }
 
-pub trait DepFeatureFlag {
-    const FEATURE_FLAG: &'static str;
-}
-
-pub struct DefaultFeatureFlag;
-
-impl DepFeatureFlag for DefaultFeatureFlag {
+pub trait DependencyFlag {
     const FEATURE_FLAG: &'static str = "default";
 }
+
+pub struct DefaultFlag;
+
+impl DependencyFlag for DefaultFlag {}
 
 pub trait FromDepContext {
     fn from_dep_context(dep_context: &DepContext, feature_flag: String) -> Self;
 }
 
-pub struct DependencyGuard<T, F = DefaultFeatureFlag>(pub T, PhantomData<F>)
+pub struct DependencyGuard<T, F = DefaultFlag>(pub T, PhantomData<F>)
 where
     T: FromDepContext,
-    F: DepFeatureFlag;
+    F: DependencyFlag;
 
-pub type Dep<T, F = DefaultFeatureFlag> = DependencyGuard<T, F>;
+pub type Dep<T, F = DefaultFlag> = DependencyGuard<T, F>;
 
 #[rocket::async_trait]
 impl<'r, T, F> FromRequest<'r> for DependencyGuard<T, F>
 where
     T: FromDepContext,
-    F: DepFeatureFlag,
+    F: DependencyFlag,
 {
     type Error = ();
 
@@ -76,7 +74,7 @@ where
 impl<T, F> Deref for DependencyGuard<T, F>
 where
     T: FromDepContext,
-    F: DepFeatureFlag,
+    F: DependencyFlag,
 {
     type Target = T;
 
