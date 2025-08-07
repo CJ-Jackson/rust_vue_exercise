@@ -78,7 +78,7 @@ impl Password {
     }
 
     pub fn encode_to_msg_pack(&self) -> Result<Box<[u8]>, Report<PasswordError>> {
-        Ok(rmp_serde::to_vec(self)
+        Ok(rmp_serde::to_vec_named(self)
             .map_err(|_| PasswordError("Failed to serialize password hash".to_string()))?
             .into())
     }
