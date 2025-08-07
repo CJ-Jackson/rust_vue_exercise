@@ -12,6 +12,7 @@ pub mod validation;
 
 #[macro_use]
 extern crate rocket;
+extern crate core;
 
 use crate::bucket_list::route::BucketListRoute;
 use crate::config::get_figment_for_rocket;
