@@ -1,6 +1,7 @@
 use crate::dependency::DependencyFlag;
 use crate::html_base::HtmlBuilder;
 use crate::user::dependency::UserDep;
+use crate::user::flag::{LoginFlag, LogoutFlag};
 use crate::user::service::{NoopService, UserLoginService};
 use maud::{Markup, html};
 use rocket::fairing::AdHoc;
@@ -35,13 +36,6 @@ pub async fn display_user(user: UserDep<NoopService>) -> Markup {
         },
     )
     .build()
-}
-
-pub struct LoginFlag;
-
-impl DependencyFlag for LoginFlag {
-    const ALLOW_USER: bool = false;
-    const ALLOW_VISITOR: bool = true;
 }
 
 #[get("/login")]
@@ -80,13 +74,6 @@ pub async fn login_post<'a>(
     );
     jar.add(Cookie::build(("login-token", token)).path("/").build());
     Redirect::to(uri!("/user"))
-}
-
-pub struct LogoutFlag;
-
-impl DependencyFlag for LogoutFlag {
-    const ALLOW_USER: bool = true;
-    const ALLOW_VISITOR: bool = false;
 }
 
 #[get("/logout")]
