@@ -1,4 +1,3 @@
-use crate::dependency::DependencyFlag;
 use crate::html_base::HtmlBuilder;
 use crate::user::dependency::UserDep;
 use crate::user::flag::{LoginFlag, LogoutFlag};

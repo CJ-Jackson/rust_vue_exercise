@@ -40,7 +40,7 @@ impl PasswordState {
 #[serde(tag = "version")]
 pub enum Password {
     /// Argon2id
-    Version1(String),
+    Version1 { argon2: String },
 }
 
 impl Password {
@@ -54,7 +54,9 @@ impl Password {
             .map_err(|_| PasswordError("Failed to hash password".to_string()))?
             .to_string();
 
-        Ok(Password::Version1(password_hash))
+        Ok(Password::Version1 {
+            argon2: password_hash,
+        })
     }
 
     pub fn verify_password(
@@ -65,8 +67,8 @@ impl Password {
             .map_err(|_| PasswordError("Failed to deserialize password hash".to_string()))?;
 
         match password_data {
-            Password::Version1(password_hash) => {
-                let parsed_hash = PasswordHash::new(&password_hash)
+            Password::Version1 { argon2 } => {
+                let parsed_hash = PasswordHash::new(&argon2)
                     .map_err(|_| PasswordError("Failed to parse password hash".to_string()))?;
 
                 match Argon2::default().verify_password(password.as_bytes(), &parsed_hash) {
@@ -79,7 +81,12 @@ impl Password {
 
     pub fn encode_to_msg_pack(&self) -> Result<Box<[u8]>, Report<PasswordError>> {
         Ok(rmp_serde::to_vec_named(self)
-            .map_err(|_| PasswordError("Failed to serialize password hash".to_string()))?
+            .map_err(|e| {
+                PasswordError(format!(
+                    "Failed to serialize password hash: {}",
+                    e.to_string()
+                ))
+            })?
             .into())
     }
 }

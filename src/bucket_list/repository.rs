@@ -5,6 +5,7 @@ use crate::error::ErrorStatus;
 use error_stack::{Report, ResultExt};
 use rocket::Request;
 use rocket::http::Status;
+use rusqlite::named_params;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -76,7 +77,10 @@ impl BucketListRepository {
 
         conn.execute(
             include_str!("_sql/add_to_bucket_list.sql"),
-            (&add_to_bucket_list.name, &add_to_bucket_list.description),
+            named_params! {
+                ":name": add_to_bucket_list.name,
+                ":description": add_to_bucket_list.description,
+            },
         )
         .change_context(BucketListRepositoryError::QueryError)?;
 
