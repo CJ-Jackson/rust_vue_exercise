@@ -7,6 +7,7 @@ use rocket::fairing::AdHoc;
 use rocket::form::Form;
 use rocket::http::{Cookie, CookieJar};
 use rocket::response::Redirect;
+use rocket::time::Duration;
 
 #[get("/")]
 pub async fn display_user(user: UserDep<NoopService>) -> Markup {
@@ -46,6 +47,7 @@ pub async fn login(_noop: UserDep<NoopService, LoginFlag>) -> Markup {
             div .container .main-content .mt-3 .px-7 .py-7 .mx-auto {
                 form method="post" {
                     input type="text" name="username" placeholder="Username";
+                    input type="password" name="password" placeholder="Password";
                     button .btn .btn-sky-blue .mt-3 type="submit" { "Login" };
                 }
             }
@@ -57,6 +59,7 @@ pub async fn login(_noop: UserDep<NoopService, LoginFlag>) -> Markup {
 #[derive(FromForm)]
 pub struct UserLoginForm {
     pub username: String,
+    pub password: String,
 }
 
 #[post("/login", data = "<data>")]
@@ -65,22 +68,26 @@ pub async fn login_post<'a>(
     user_login: UserDep<UserLoginService, LoginFlag>,
     jar: &'a CookieJar<'_>,
 ) -> Redirect {
-    let token = user_login.0.validate_login(data.username.clone());
-    jar.add(
-        Cookie::build(("login-username", data.username.clone()))
-            .path("/")
-            .build(),
-    );
-    jar.add(Cookie::build(("login-token", token)).path("/").build());
+    let token = user_login
+        .0
+        .validate_login(data.username.clone(), data.password.clone());
+    if let Some(token) = token {
+        jar.add(
+            Cookie::build(("login-token", token))
+                .path("/")
+                .max_age(Duration::days(30))
+                .build(),
+        );
+    }
+
     Redirect::to(uri!("/user"))
 }
 
 #[get("/logout")]
 pub async fn logout<'a>(
-    _noop: UserDep<NoopService, LogoutFlag>,
+    _noop: UserDep<UserLoginService, LogoutFlag>,
     jar: &'a CookieJar<'_>,
 ) -> Redirect {
-    jar.remove(Cookie::from("login-username"));
     jar.remove(Cookie::from("login-token"));
     Redirect::to(uri!("/user"))
 }
