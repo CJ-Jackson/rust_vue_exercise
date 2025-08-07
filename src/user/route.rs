@@ -23,7 +23,7 @@ pub async fn display_user(user: UserDep<NoopService>) -> Markup {
                 h1 .mt-3 { (title) }
                 p { "Welcome to the user page!" }
                 @if user.1.is_user {
-                    p { "You are logged in as a user. Username:" (user.1.username) }
+                    p { "You are logged in as a user '" (user.1.username) "'." }
                     p { "You can log out by clicking the button below." }
                     a .btn .btn-sky-blue .mt-3 href="/user/logout" { "Log out" }
                 } @else {
