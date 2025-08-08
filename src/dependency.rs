@@ -41,11 +41,21 @@ impl GlobalContext {
     }
 }
 
+#[derive(Clone)]
 pub struct DependencyFlagData {
     pub feature_flag: Box<[String]>,
     pub use_forward: bool,
     pub allow_user: bool,
     pub allow_visitor: bool,
+}
+
+impl DependencyFlagData {
+    pub fn override_feature_flag(&self, feature_flag: &str) -> Arc<Self> {
+        Arc::new(Self {
+            feature_flag: feature_flag.split(' ').map(String::from).collect(),
+            ..self.clone()
+        })
+    }
 }
 
 pub trait DependencyFlag {
