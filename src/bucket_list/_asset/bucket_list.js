@@ -11,7 +11,7 @@ createApp({
     },
     methods: {
         getBucketList() {
-            fetch('/bucket_list/all')
+            fetch('/bucket-list/all')
                 .then(res => res.json())
                 .then(data => {
                     this.bucket_list = data;
@@ -28,7 +28,7 @@ createApp({
                 name: this.input_name,
                 description: this.input_description
             }
-            fetch('/bucket_list/add', {
+            fetch('/bucket-list/add', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

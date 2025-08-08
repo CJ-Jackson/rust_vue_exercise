@@ -264,7 +264,7 @@ body {
     background-color: var(--color-blue-950);
   }
 }
-.main-content {
+.main-content, .nav-content {
   border-radius: var(--radius-2xl);
   background-color: var(--color-white);
   @media (prefers-color-scheme: dark) {
@@ -272,6 +272,23 @@ body {
   }
   @media (prefers-color-scheme: dark) {
     color: var(--color-white);
+  }
+}
+.nav-content {
+  display: flex;
+  .nav-home {
+    flex: 3;
+    --tw-font-weight: var(--font-weight-bold);
+    font-weight: var(--font-weight-bold);
+  }
+  .nav-item {
+    flex: 1;
+  }
+  .nav-item-active {
+    color: var(--color-sky-500);
+  }
+  .nav-user {
+    flex: 3;
   }
 }
 .bucket-list-item, .bucket-list-header, .bucket-form, .bucket-form-error {

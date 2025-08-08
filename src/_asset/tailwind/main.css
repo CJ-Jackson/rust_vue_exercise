@@ -36,8 +36,28 @@ body {
     @apply bg-blue-400 dark:bg-blue-950;
 }
 
-.main-content {
+.main-content, .nav-content {
     @apply bg-white rounded-2xl dark:bg-gray-800 dark:text-white;
+}
+
+.nav-content {
+    @apply flex;
+
+    .nav-home {
+        @apply flex-3 font-bold;
+    }
+
+    .nav-item {
+        @apply flex-1;
+    }
+
+    .nav-item-active {
+        @apply text-sky-500;
+    }
+
+    .nav-user {
+        @apply flex-3;
+    }
 }
 
 .bucket-list-item, .bucket-list-header, .bucket-form, .bucket-form-error {

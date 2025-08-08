@@ -29,11 +29,12 @@ use rocket::serde::json::Value;
 use rocket::serde::json::serde_json::json;
 
 #[get("/")]
-async fn root(flash_html_builder: UserDep<ContextHtmlBuilder>) -> Markup {
+async fn root(context_html_builder: UserDep<ContextHtmlBuilder>) -> Markup {
     let title = "Rust Vue Exercise";
-    flash_html_builder
+    context_html_builder
         .0
         .attach_title(title.to_string())
+        .set_current_tag("home".to_string())
         .attach_content(html! {
             h1 .mt-3 { (title) }
             p .mt-3 { "This is Rust Vue Exercise." }

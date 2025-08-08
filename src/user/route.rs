@@ -10,21 +10,22 @@ use rocket::response::{Flash, Redirect};
 use rocket::time::Duration;
 
 #[get("/")]
-pub async fn display_user(flash_html_builder: UserDep<ContextHtmlBuilder>) -> Markup {
-    let title = if flash_html_builder.1.is_user {
-        format!("User: {}", flash_html_builder.1.username)
+pub async fn display_user(context_html_builder: UserDep<ContextHtmlBuilder>) -> Markup {
+    let title = if context_html_builder.1.is_user {
+        format!("User: {}", context_html_builder.1.username)
     } else {
         "Visitor".to_string()
     };
 
-    flash_html_builder
+    context_html_builder
         .0
         .attach_title(title.to_string())
+        .set_current_tag("user".to_string())
         .attach_content(html! {
             h1 .mt-3 { (title) }
             p { "Welcome to the user page!" }
-            @if flash_html_builder.1.is_user {
-                p { "You are logged in as a user '" (flash_html_builder.1.username) "'." }
+            @if context_html_builder.1.is_user {
+                p { "You are logged in as a user '" (context_html_builder.1.username) "'." }
                 p { "You can log out by clicking the button below." }
                 a .btn .btn-sky-blue .mt-3 href="/user/logout" { "Log out" }
             } @else {
@@ -37,11 +38,12 @@ pub async fn display_user(flash_html_builder: UserDep<ContextHtmlBuilder>) -> Ma
 }
 
 #[get("/login")]
-pub async fn login(flash_html_builder: UserDep<ContextHtmlBuilder, LoginFlag>) -> Markup {
+pub async fn login(context_html_builder: UserDep<ContextHtmlBuilder, LoginFlag>) -> Markup {
     let title = "Login".to_string();
-    flash_html_builder
+    context_html_builder
         .0
         .attach_title(title.clone())
+        .set_current_tag("user".to_string())
         .attach_content(html! {
             form method="post" .form {
                 input .form-item type="text" name="username" placeholder="Username";

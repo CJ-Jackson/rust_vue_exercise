@@ -75,11 +75,41 @@ impl HtmlBuilder {
     }
 }
 
+pub struct NavigationItem {
+    name: String,
+    url: String,
+    tag: String,
+}
+
+impl NavigationItem {
+    fn navigations() -> Box<[Self]> {
+        [
+            Self {
+                name: "Home".to_string(),
+                url: "/".to_string(),
+                tag: "home".to_string(),
+            },
+            Self {
+                name: "Bucket List".to_string(),
+                url: "/bucket-list/".to_string(),
+                tag: "bucket-list".to_string(),
+            },
+            Self {
+                name: "User".to_string(),
+                url: "/user/".to_string(),
+                tag: "user".to_string(),
+            },
+        ]
+        .into()
+    }
+}
+
 pub struct HtmlCell {
     title: Option<String>,
     content: Option<Markup>,
     head: Option<Markup>,
     footer: Option<Markup>,
+    current_tag: String,
 }
 
 pub struct ContextHtmlBuilder {
@@ -98,6 +128,7 @@ impl ContextHtmlBuilder {
                 content: None,
                 head: None,
                 footer: None,
+                current_tag: "".to_string(),
             }),
         }
     }
@@ -122,6 +153,11 @@ impl ContextHtmlBuilder {
         self
     }
 
+    pub fn set_current_tag(&self, tag: String) -> &Self {
+        self.data.borrow_mut().current_tag = tag;
+        self
+    }
+
     pub fn build(&self) -> Markup {
         let parse_flash = self.parse_flash();
         let data = self.data.borrow();
@@ -131,6 +167,7 @@ impl ContextHtmlBuilder {
         let footer = data.footer.clone().unwrap_or_else(|| html! {});
 
         let new_content = html! {
+            (self.build_navigation())
             div .container .main-content .mt-3 .px-7 .py-7 .mx-auto {
                 (parse_flash)
                 (content)
@@ -173,6 +210,42 @@ impl ContextHtmlBuilder {
     fn set_user_context(mut self, user_context: Arc<UserContext>) -> Self {
         self.user_context = Some(user_context);
         self
+    }
+
+    fn build_navigation(&self) -> Markup {
+        let user_context = self.user_context.as_ref();
+        html! {
+            div .container .nav-content .mt-3 .px-7 .py-7 .mx-auto {
+                a .nav-home href="/" { "Rust Vue Exercise, and more" }
+                (self.parse_navigation(self.data.borrow().current_tag.clone()))
+                @if let Some(user_context) = user_context {
+                    @if user_context.is_user {
+                        a .nav-user href="/user/" { "Hello, " (user_context.username) }
+                    } @else {
+                        a .nav-user href="/user/login" { "You're a visitor, click here to login" }
+                    }
+                } @else {
+                    a .nav-user href="/user/login" { "Login" }
+                }
+            }
+        }
+    }
+
+    fn parse_navigation(&self, tag: String) -> Markup {
+        let mut output = "".to_string();
+        for item in NavigationItem::navigations() {
+            let html = if item.tag == tag {
+                html! {
+                    a .nav-item .nav-item-active href=(item.url) { (item.name) }
+                }
+            } else {
+                html! {
+                    a .nav-item href=(item.url) { (item.name) }
+                }
+            };
+            output.push_str(html.into_string().as_str());
+        }
+        PreEscaped(output)
     }
 }
 

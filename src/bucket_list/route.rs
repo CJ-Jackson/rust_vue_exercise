@@ -15,11 +15,12 @@ use rocket::serde::json::Value;
 use rocket::serde::json::serde_json::json;
 
 #[get("/")]
-pub async fn main_bucket_list(flash_html_builder: UserDep<ContextHtmlBuilder>) -> Markup {
+pub async fn main_bucket_list(context_html_builder: UserDep<ContextHtmlBuilder>) -> Markup {
     let title = "Bucket List";
-    flash_html_builder
+    context_html_builder
         .0
         .attach_title(title.to_string())
+        .set_current_tag("bucket-list".to_string())
         .attach_content(html! {
             h1 .mt-3 { (title) }
             div #bucket-list .mt-3 v-cloak {
@@ -112,7 +113,7 @@ impl BucketListRoute {
     pub fn adhoc() -> AdHoc {
         AdHoc::on_ignite("BucketListRoute", |rocket| async {
             rocket.mount(
-                "/bucket_list",
+                "/bucket-list",
                 routes![main_bucket_list, all_bucket_list, add_bucket_list],
             )
         })
