@@ -3,8 +3,9 @@ use crate::bucket_list::repository::{BucketListRepository, BucketListRepositoryE
 use crate::bucket_list::validate::validate_add_to_bucket_list;
 use crate::dependency::Dep;
 use crate::error::{ErrorOutput, ErrorReportResponse};
-use crate::html_base::FlashHtmlBuilder;
+use crate::html_base::ContextHtmlBuilder;
 use crate::icon::plus_icon;
+use crate::user::dependency::UserDep;
 use crate::validation::ValidationErrorResponse;
 use error_stack::ResultExt;
 use maud::{Markup, PreEscaped, html};
@@ -14,9 +15,10 @@ use rocket::serde::json::Value;
 use rocket::serde::json::serde_json::json;
 
 #[get("/")]
-pub async fn main_bucket_list(flash_html_builder: Dep<FlashHtmlBuilder>) -> Markup {
+pub async fn main_bucket_list(flash_html_builder: UserDep<ContextHtmlBuilder>) -> Markup {
     let title = "Bucket List";
     flash_html_builder
+        .0
         .attach_title(title.to_string())
         .attach_content(html! {
             h1 .mt-3 { (title) }

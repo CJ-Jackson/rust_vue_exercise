@@ -59,3 +59,27 @@ body {
 .bucket-form-error {
     @apply text-red-500;
 }
+
+.flash-message {
+    @apply fixed bottom-0 left-0 right-0 text-white p-4 text-center;
+}
+
+.flash-message-success {
+    @apply bg-green-500;
+}
+
+.flash-message-error {
+    @apply bg-red-500;
+}
+
+.flash-message-warning {
+    @apply bg-yellow-500;
+}
+
+.form {
+    @apply flex flex-col;
+
+    .form-item {
+        @apply mb-2 text-lg dark:border-blue-950 border-b-gray-600 border-2 rounded pl-2;
+    }
+}

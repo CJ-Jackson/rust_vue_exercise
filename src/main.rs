@@ -16,9 +16,10 @@ extern crate core;
 
 use crate::bucket_list::route::BucketListRoute;
 use crate::config::get_figment_for_rocket;
-use crate::dependency::{Dep, GlobalContext};
-use crate::html_base::FlashHtmlBuilder;
+use crate::dependency::GlobalContext;
+use crate::html_base::ContextHtmlBuilder;
 use crate::icon::plus_icon;
+use crate::user::dependency::UserDep;
 use crate::user::route::UserRoute;
 use crate::utils::{EmbedEtag, EtagCheck};
 use content_type::IcoFile;
@@ -28,9 +29,10 @@ use rocket::serde::json::Value;
 use rocket::serde::json::serde_json::json;
 
 #[get("/")]
-async fn root(flash_html_builder: Dep<FlashHtmlBuilder>) -> Markup {
+async fn root(flash_html_builder: UserDep<ContextHtmlBuilder>) -> Markup {
     let title = "Rust Vue Exercise";
     flash_html_builder
+        .0
         .attach_title(title.to_string())
         .attach_content(html! {
             h1 .mt-3 { (title) }

@@ -1,4 +1,6 @@
 use crate::dependency::{DependencyError, DependencyFlagData, FromGlobalContext, GlobalContext};
+use crate::user::dependency::FromUserContext;
+use crate::user::model::UserContext;
 use maud::{DOCTYPE, Markup, PreEscaped, html};
 use rocket::Request;
 use rocket::request::FlashMessage;
@@ -80,15 +82,17 @@ pub struct HtmlCell {
     footer: Option<Markup>,
 }
 
-pub struct FlashHtmlBuilder {
+pub struct ContextHtmlBuilder {
     flash_message: Option<(String, String)>,
+    user_context: Option<Arc<UserContext>>,
     data: RefCell<HtmlCell>,
 }
 
-impl FlashHtmlBuilder {
+impl ContextHtmlBuilder {
     pub fn new(flash_message: Option<(String, String)>) -> Self {
         Self {
             flash_message,
+            user_context: None,
             data: RefCell::new(HtmlCell {
                 title: None,
                 content: None,
@@ -165,9 +169,14 @@ impl FlashHtmlBuilder {
             _ => html! {},
         }
     }
+
+    fn set_user_context(mut self, user_context: Arc<UserContext>) -> Self {
+        self.user_context = Some(user_context);
+        self
+    }
 }
 
-impl FromGlobalContext for FlashHtmlBuilder {
+impl FromGlobalContext for ContextHtmlBuilder {
     async fn from_global_context(
         _global_context: &GlobalContext,
         _flag: Arc<DependencyFlagData>,
@@ -190,5 +199,17 @@ impl FromGlobalContext for FlashHtmlBuilder {
             };
 
         Ok(Self::new(flash_message))
+    }
+}
+
+impl FromUserContext for ContextHtmlBuilder {
+    async fn from_user_context<'r>(
+        user_context: Arc<UserContext>,
+        global_context: &GlobalContext,
+        flag: Arc<DependencyFlagData>,
+        request: Option<&'r Request<'_>>,
+    ) -> Result<Self, DependencyError> {
+        let flash_html_builder = Self::from_global_context(global_context, flag, request).await?;
+        Ok(flash_html_builder.set_user_context(user_context))
     }
 }

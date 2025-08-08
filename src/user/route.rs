@@ -1,8 +1,7 @@
-use crate::dependency::Dep;
-use crate::html_base::FlashHtmlBuilder;
+use crate::html_base::ContextHtmlBuilder;
 use crate::user::dependency::UserDep;
 use crate::user::flag::{LoginFlag, LogoutFlag};
-use crate::user::service::{NoopService, UserLoginService};
+use crate::user::service::UserLoginService;
 use maud::{Markup, html};
 use rocket::fairing::AdHoc;
 use rocket::form::Form;
@@ -11,23 +10,21 @@ use rocket::response::{Flash, Redirect};
 use rocket::time::Duration;
 
 #[get("/")]
-pub async fn display_user(
-    user: UserDep<NoopService>,
-    flash_html_builder: Dep<FlashHtmlBuilder>,
-) -> Markup {
-    let title = if user.1.is_user {
-        format!("User: {}", user.1.username)
+pub async fn display_user(flash_html_builder: UserDep<ContextHtmlBuilder>) -> Markup {
+    let title = if flash_html_builder.1.is_user {
+        format!("User: {}", flash_html_builder.1.username)
     } else {
         "Visitor".to_string()
     };
 
     flash_html_builder
+        .0
         .attach_title(title.to_string())
         .attach_content(html! {
             h1 .mt-3 { (title) }
             p { "Welcome to the user page!" }
-            @if user.1.is_user {
-                p { "You are logged in as a user '" (user.1.username) "'." }
+            @if flash_html_builder.1.is_user {
+                p { "You are logged in as a user '" (flash_html_builder.1.username) "'." }
                 p { "You can log out by clicking the button below." }
                 a .btn .btn-sky-blue .mt-3 href="/user/logout" { "Log out" }
             } @else {
@@ -40,17 +37,15 @@ pub async fn display_user(
 }
 
 #[get("/login")]
-pub async fn login(
-    _noop: UserDep<NoopService, LoginFlag>,
-    flash_html_builder: Dep<FlashHtmlBuilder>,
-) -> Markup {
+pub async fn login(flash_html_builder: UserDep<ContextHtmlBuilder, LoginFlag>) -> Markup {
     let title = "Login".to_string();
     flash_html_builder
+        .0
         .attach_title(title.clone())
         .attach_content(html! {
-            form method="post" {
-                input type="text" name="username" placeholder="Username";
-                input type="password" name="password" placeholder="Password";
+            form method="post" .form {
+                input .form-item type="text" name="username" placeholder="Username";
+                input .form-item type="password" name="password" placeholder="Password";
                 button .btn .btn-sky-blue .mt-3 type="submit" { "Login" };
             }
         })
@@ -89,10 +84,10 @@ pub async fn login_post<'a>(
 pub async fn logout<'a>(
     user_login: UserDep<UserLoginService, LogoutFlag>,
     jar: &'a CookieJar<'_>,
-) -> Redirect {
+) -> Flash<Redirect> {
     user_login.0.logout();
     jar.remove(Cookie::from("login-token"));
-    Redirect::to(uri!("/user"))
+    Flash::success(Redirect::to(uri!("/user")), "Logout succeeded.")
 }
 
 pub struct UserRoute;
