@@ -167,9 +167,9 @@ impl ContextHtmlBuilder {
         let footer = data.footer.clone().unwrap_or_else(|| html! {});
 
         let new_content = html! {
+            (parse_flash)
             (self.build_navigation())
             div .container .main-content .mt-3 .px-7 .py-7 .mx-auto {
-                (parse_flash)
                 (content)
             }
         };
