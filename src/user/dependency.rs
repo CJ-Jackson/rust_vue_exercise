@@ -76,10 +76,10 @@ where
                     Outcome::Error((Status::InternalServerError, ()))
                 }
             }
-            Some(dep_context) => {
+            Some(global_context) => {
                 match T::from_user_context(
                     Arc::clone(&user_context),
-                    dep_context,
+                    global_context,
                     Arc::clone(&flag),
                     Some(req),
                 ) {

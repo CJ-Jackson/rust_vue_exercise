@@ -121,12 +121,12 @@ impl UserLoginService {
 impl FromUserContext for UserLoginService {
     fn from_user_context(
         _user_context: Arc<UserContext>,
-        dep_context: &GlobalContext,
+        global_context: &GlobalContext,
         feature_flag: Arc<DependencyFlagData>,
         _request: Option<&Request>,
     ) -> Result<Self, DependencyError> {
         Ok(Self::new(UserRepository::from_global_context(
-            dep_context,
+            global_context,
             feature_flag,
             None,
         )?))

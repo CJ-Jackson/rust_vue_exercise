@@ -161,11 +161,11 @@ impl UserRepository {
 }
 
 impl FromGlobalContext for UserRepository {
-    fn from_global_context<'r>(
-        dep_context: &GlobalContext,
+    fn from_global_context(
+        global_context: &GlobalContext,
         _flag: Arc<DependencyFlagData>,
-        _request: Option<&'r Request<'_>>,
+        _request: Option<&Request>,
     ) -> Result<Self, DependencyError> {
-        Ok(Self::new(dep_context.sqlite_client.clone()))
+        Ok(Self::new(global_context.sqlite_client.clone()))
     }
 }

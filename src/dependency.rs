@@ -6,7 +6,6 @@ use rocket::http::Status;
 use rocket::request::{FromRequest, Outcome};
 use std::marker::PhantomData;
 use std::ops::Deref;
-use std::rc::Rc;
 use std::sync::Arc;
 use thiserror::Error;
 
@@ -111,8 +110,8 @@ where
                     Outcome::Error((Status::InternalServerError, ()))
                 }
             }
-            Some(dep_context) => {
-                match T::from_global_context(dep_context, Arc::clone(&flag), Some(req)) {
+            Some(global_context) => {
+                match T::from_global_context(global_context, Arc::clone(&flag), Some(req)) {
                     Ok(dep) => Outcome::Success(Self(dep, PhantomData)),
                     Err(_) => {
                         if flag.use_forward {
