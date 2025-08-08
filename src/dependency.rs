@@ -13,6 +13,8 @@ use thiserror::Error;
 pub enum DependencyError {
     #[error("Needs request")]
     NeedsRequest,
+    #[error("Dependency error: {0}")]
+    Other(String),
 }
 
 pub struct GlobalContext {
@@ -82,7 +84,7 @@ pub trait FromGlobalContext: Sized {
         global_context: &GlobalContext,
         flag: Arc<DependencyFlagData>,
         request: Option<&'r Request<'_>>,
-    ) -> Result<Self, DependencyError>;
+    ) -> impl Future<Output = Result<Self, DependencyError>> + Send;
 }
 
 pub struct DependencyGuard<T, F = DefaultFlag>(pub T, PhantomData<F>)
@@ -111,7 +113,7 @@ where
                 }
             }
             Some(global_context) => {
-                match T::from_global_context(global_context, Arc::clone(&flag), Some(req)) {
+                match T::from_global_context(global_context, Arc::clone(&flag), Some(req)).await {
                     Ok(dep) => Outcome::Success(Self(dep, PhantomData)),
                     Err(_) => {
                         if flag.use_forward {

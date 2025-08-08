@@ -16,46 +16,43 @@ extern crate core;
 
 use crate::bucket_list::route::BucketListRoute;
 use crate::config::get_figment_for_rocket;
-use crate::dependency::GlobalContext;
+use crate::dependency::{Dep, GlobalContext};
+use crate::html_base::FlashHtmlBuilder;
 use crate::icon::plus_icon;
 use crate::user::route::UserRoute;
 use crate::utils::{EmbedEtag, EtagCheck};
 use content_type::IcoFile;
-use html_base::HtmlBuilder;
 use maud::{Markup, PreEscaped, html};
 use rocket::response::content::RawCss;
 use rocket::serde::json::Value;
 use rocket::serde::json::serde_json::json;
 
 #[get("/")]
-async fn root() -> Markup {
+async fn root(flash_html_builder: Dep<FlashHtmlBuilder>) -> Markup {
     let title = "Rust Vue Exercise";
-    HtmlBuilder::new(
-        title.to_string(),
-        html! {
-            div .container .main-content .mt-3 .px-7 .py-7 .mx-auto {
-                h1 .mt-3 { (title) }
-                p .mt-3 { "This is Rust Vue Exercise." }
-                h2 .mt-3 { "Exercise 1" }
-                div #app .mt-3 v-cloak { "{{ message }}" }
-                h2 .mt-3 { "Exercise 2" }
-                div #counter .mt-3 v-cloak {
-                    button .btn .btn-sky-blue "@click"="count++" {
-                        "Count is: {{ count }}  "
-                        (plus_icon())
-                    }
-                }
-                h2 .mt-3 { "Exercise 3" }
-                div #array .mt-3 v-cloak {
-                    ul .ul-bullet {
-                        li "v-for"="(item) in items" { "{{ item }}" }
-                    }
+    flash_html_builder
+        .attach_title(title.to_string())
+        .attach_content(html! {
+            h1 .mt-3 { (title) }
+            p .mt-3 { "This is Rust Vue Exercise." }
+            h2 .mt-3 { "Exercise 1" }
+            div #app .mt-3 v-cloak { "{{ message }}" }
+            h2 .mt-3 { "Exercise 2" }
+            div #counter .mt-3 v-cloak {
+                button .btn .btn-sky-blue "@click"="count++" {
+                    "Count is: {{ count }}  "
+                    (plus_icon())
                 }
             }
-        },
-    )
-    .attach_footer(root_js())
-    .build()
+            h2 .mt-3 { "Exercise 3" }
+            div #array .mt-3 v-cloak {
+                ul .ul-bullet {
+                    li "v-for"="(item) in items" { "{{ item }}" }
+                }
+            }
+        })
+        .attach_footer(root_js())
+        .build()
 }
 
 fn root_js() -> Markup {

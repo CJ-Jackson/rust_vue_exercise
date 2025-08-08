@@ -3,7 +3,7 @@ use crate::bucket_list::repository::{BucketListRepository, BucketListRepositoryE
 use crate::bucket_list::validate::validate_add_to_bucket_list;
 use crate::dependency::Dep;
 use crate::error::{ErrorOutput, ErrorReportResponse};
-use crate::html_base::HtmlBuilder;
+use crate::html_base::FlashHtmlBuilder;
 use crate::icon::plus_icon;
 use crate::validation::ValidationErrorResponse;
 use error_stack::ResultExt;
@@ -14,55 +14,52 @@ use rocket::serde::json::Value;
 use rocket::serde::json::serde_json::json;
 
 #[get("/")]
-pub async fn main_bucket_list() -> Markup {
+pub async fn main_bucket_list(flash_html_builder: Dep<FlashHtmlBuilder>) -> Markup {
     let title = "Bucket List";
-    HtmlBuilder::new(
-        title.to_string(),
-        html! {
-            div .container .main-content .mt-3 .px-7 .py-7 .mx-auto {
-                h1 .mt-3 { (title) }
-                div #bucket-list .mt-3 v-cloak {
-                    div .bucket-list-header {
-                        span .bucket-list-col { "ID" }
-                        span .bucket-list-col { "Name" }
-                        span .bucket-list-col { "Description" }
-                        span .bucket-list-col { "Timestamp" }
-                    }
-                    div .bucket-list-item "v-for"="item in bucket_list" {
-                        span .bucket-list-col { "{{ item.id }}" }
-                        span .bucket-list-col { "{{ item.name }}" }
-                        span .bucket-list-col { "{{ item.description }}" }
-                        span .bucket-list-col { "{{ item.timestamp }}" }
-                    }
-                    div .bucket-form .mt-5 {
-                        input .bucket-list-col .bucket-form-input
-                            type="text" placeholder="Name" "v-model"="input_name";
-                        input .bucket-list-col .bucket-form-input
-                            type="text" placeholder="Description" "v-model"="input_description";
-                        button .bucket-list-col .btn .btn-sky-blue "v-on:click"="addToBucketList" {
-                            "Add"
-                            (plus_icon())
-                        }
-                    }
-                    div .bucket-form-error "v-if"="error" {
-                        span .bucket-list-col {
-                            ul {
-                                li "v-for"="message in error.name" { "{{ message }}" }
-                            }
-                        }
-                        span .bucket-list-col {
-                            ul {
-                                li "v-for"="message in error.description" { "{{ message }}" }
-                            }
-                        }
-                        span .bucket-list-col {}
+    flash_html_builder
+        .attach_title(title.to_string())
+        .attach_content(html! {
+            h1 .mt-3 { (title) }
+            div #bucket-list .mt-3 v-cloak {
+                div .bucket-list-header {
+                    span .bucket-list-col { "ID" }
+                    span .bucket-list-col { "Name" }
+                    span .bucket-list-col { "Description" }
+                    span .bucket-list-col { "Timestamp" }
+                }
+                div .bucket-list-item "v-for"="item in bucket_list" {
+                    span .bucket-list-col { "{{ item.id }}" }
+                    span .bucket-list-col { "{{ item.name }}" }
+                    span .bucket-list-col { "{{ item.description }}" }
+                    span .bucket-list-col { "{{ item.timestamp }}" }
+                }
+                div .bucket-form .mt-5 {
+                    input .bucket-list-col .bucket-form-input
+                        type="text" placeholder="Name" "v-model"="input_name";
+                    input .bucket-list-col .bucket-form-input
+                        type="text" placeholder="Description" "v-model"="input_description";
+                    button .bucket-list-col .btn .btn-sky-blue "v-on:click"="addToBucketList" {
+                        "Add"
+                        (plus_icon())
                     }
                 }
+                div .bucket-form-error "v-if"="error" {
+                    span .bucket-list-col {
+                        ul {
+                            li "v-for"="message in error.name" { "{{ message }}" }
+                        }
+                    }
+                    span .bucket-list-col {
+                        ul {
+                            li "v-for"="message in error.description" { "{{ message }}" }
+                        }
+                    }
+                    span .bucket-list-col {}
+                }
             }
-        },
-    )
-    .attach_footer(get_bucket_list_js())
-    .build()
+        })
+        .attach_footer(get_bucket_list_js())
+        .build()
 }
 
 pub fn get_bucket_list_js() -> Markup {

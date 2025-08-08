@@ -15,7 +15,7 @@ pub trait FromUserContext: Sized {
         global_context: &GlobalContext,
         flag: Arc<DependencyFlagData>,
         request: Option<&'r Request<'_>>,
-    ) -> Result<Self, DependencyError>;
+    ) -> impl Future<Output = Result<Self, DependencyError>> + Send;
 }
 
 pub struct UserDependencyGuard<T, F = DefaultFlag>(pub T, pub Arc<UserContext>, PhantomData<F>)
@@ -82,7 +82,9 @@ where
                     global_context,
                     Arc::clone(&flag),
                     Some(req),
-                ) {
+                )
+                .await
+                {
                     Ok(dep) => Outcome::Success(Self(dep, user_context, PhantomData)),
                     Err(_) => {
                         if flag.use_forward {

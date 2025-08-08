@@ -10,21 +10,21 @@ use uuid::Uuid;
 pub struct NoopService;
 
 impl FromGlobalContext for NoopService {
-    fn from_global_context(
+    async fn from_global_context(
         _dep_context: &GlobalContext,
         _feature_flag: Arc<DependencyFlagData>,
-        _request: Option<&Request>,
+        _request: Option<&Request<'_>>,
     ) -> Result<Self, DependencyError> {
         Ok(Self)
     }
 }
 
 impl FromUserContext for NoopService {
-    fn from_user_context(
+    async fn from_user_context(
         _user_context: Arc<UserContext>,
         _dep_context: &GlobalContext,
         _feature_flag: Arc<DependencyFlagData>,
-        _request: Option<&Request>,
+        _request: Option<&Request<'_>>,
     ) -> Result<Self, DependencyError> {
         Ok(Self)
     }
@@ -71,16 +71,16 @@ impl UserCheckService {
 }
 
 impl FromGlobalContext for UserCheckService {
-    fn from_global_context(
+    async fn from_global_context(
         dep_context: &GlobalContext,
         feature_flag: Arc<DependencyFlagData>,
-        request: Option<&Request>,
+        request: Option<&Request<'_>>,
     ) -> Result<Self, DependencyError> {
         let request = request.ok_or(DependencyError::NeedsRequest)?;
         let cookies = request.cookies();
 
         Ok(Self::new(
-            UserRepository::from_global_context(dep_context, feature_flag, None)?,
+            UserRepository::from_global_context(dep_context, feature_flag, None).await?,
             cookies.get("login-token").map(|c| c.value().to_string()),
         ))
     }
@@ -88,11 +88,15 @@ impl FromGlobalContext for UserCheckService {
 
 pub struct UserLoginService {
     user_repository: UserRepository,
+    token_cookie: Option<String>,
 }
 
 impl UserLoginService {
-    fn new(user_repository: UserRepository) -> Self {
-        Self { user_repository }
+    fn new(user_repository: UserRepository, token_cookie: Option<String>) -> Self {
+        Self {
+            user_repository,
+            token_cookie,
+        }
     }
     pub fn validate_login(&self, username: String, password: String) -> Option<String> {
         if let Ok(id_password) = self.user_repository.get_user_password(username) {
@@ -116,19 +120,29 @@ impl UserLoginService {
 
         None
     }
+
+    pub fn logout(&self) -> bool {
+        if let Some(token) = &self.token_cookie {
+            self.user_repository.delete_token(token.clone()).is_ok()
+        } else {
+            false
+        }
+    }
 }
 
 impl FromUserContext for UserLoginService {
-    fn from_user_context(
+    async fn from_user_context(
         _user_context: Arc<UserContext>,
         global_context: &GlobalContext,
-        feature_flag: Arc<DependencyFlagData>,
-        _request: Option<&Request>,
+        flag: Arc<DependencyFlagData>,
+        request: Option<&Request<'_>>,
     ) -> Result<Self, DependencyError> {
-        Ok(Self::new(UserRepository::from_global_context(
-            global_context,
-            feature_flag,
-            None,
-        )?))
+        let request = request.ok_or(DependencyError::NeedsRequest)?;
+        let cookies = request.cookies();
+
+        Ok(Self::new(
+            UserRepository::from_global_context(global_context, flag, None).await?,
+            cookies.get("login-token").map(|c| c.value().to_string()),
+        ))
     }
 }
