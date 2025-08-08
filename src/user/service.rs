@@ -1,4 +1,4 @@
-use crate::dependency::{DepContext, DependencyError, FromDepContext};
+use crate::dependency::{DependencyError, DependencyFlagData, FromGlobalContext, GlobalContext};
 use crate::user::dependency::FromUserContext;
 use crate::user::model::{IdUsername, UserContext};
 use crate::user::password::Password;
@@ -9,10 +9,10 @@ use uuid::Uuid;
 
 pub struct NoopService;
 
-impl FromDepContext for NoopService {
-    fn from_dep_context(
-        _dep_context: &DepContext,
-        _feature_flag: String,
+impl FromGlobalContext for NoopService {
+    fn from_global_context(
+        _dep_context: &GlobalContext,
+        _feature_flag: Arc<DependencyFlagData>,
         _request: Option<&Request>,
     ) -> Result<Self, DependencyError> {
         Ok(Self)
@@ -22,8 +22,8 @@ impl FromDepContext for NoopService {
 impl FromUserContext for NoopService {
     fn from_user_context(
         _user_context: Arc<UserContext>,
-        _dep_context: &DepContext,
-        _feature_flag: String,
+        _dep_context: &GlobalContext,
+        _feature_flag: Arc<DependencyFlagData>,
         _request: Option<&Request>,
     ) -> Result<Self, DependencyError> {
         Ok(Self)
@@ -70,17 +70,17 @@ impl UserCheckService {
     }
 }
 
-impl FromDepContext for UserCheckService {
-    fn from_dep_context(
-        dep_context: &DepContext,
-        feature_flag: String,
+impl FromGlobalContext for UserCheckService {
+    fn from_global_context(
+        dep_context: &GlobalContext,
+        feature_flag: Arc<DependencyFlagData>,
         request: Option<&Request>,
     ) -> Result<Self, DependencyError> {
         let request = request.ok_or(DependencyError::NeedsRequest)?;
         let cookies = request.cookies();
 
         Ok(Self::new(
-            UserRepository::from_dep_context(dep_context, feature_flag, None)?,
+            UserRepository::from_global_context(dep_context, feature_flag, None)?,
             cookies.get("login-token").map(|c| c.value().to_string()),
         ))
     }
@@ -121,11 +121,11 @@ impl UserLoginService {
 impl FromUserContext for UserLoginService {
     fn from_user_context(
         _user_context: Arc<UserContext>,
-        dep_context: &DepContext,
-        feature_flag: String,
+        dep_context: &GlobalContext,
+        feature_flag: Arc<DependencyFlagData>,
         _request: Option<&Request>,
     ) -> Result<Self, DependencyError> {
-        Ok(Self::new(UserRepository::from_dep_context(
+        Ok(Self::new(UserRepository::from_global_context(
             dep_context,
             feature_flag,
             None,

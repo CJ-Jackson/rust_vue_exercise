@@ -1,4 +1,6 @@
-use crate::dependency::{DefaultFlag, Dep, DepContext, DependencyError, DependencyFlag};
+use crate::dependency::{
+    DefaultFlag, Dep, DependencyError, DependencyFlag, DependencyFlagData, GlobalContext,
+};
 use crate::user::model::UserContext;
 use crate::user::service::UserCheckService;
 use rocket::Request;
@@ -10,8 +12,8 @@ use std::sync::Arc;
 pub trait FromUserContext: Sized {
     fn from_user_context<'r>(
         user_context: Arc<UserContext>,
-        dep_context: &DepContext,
-        feature_flag: String,
+        global_context: &GlobalContext,
+        flag: Arc<DependencyFlagData>,
         request: Option<&'r Request<'_>>,
     ) -> Result<Self, DependencyError>;
 }
@@ -32,6 +34,7 @@ where
     type Error = ();
 
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        let flag = F::build_flag_data();
         let user_context = req
             .local_cache_async(async {
                 let user_service = req.guard::<Dep<UserCheckService>>().await.succeeded()?;
@@ -42,7 +45,7 @@ where
 
         let user_context = match user_context {
             None => {
-                return if F::use_forward() {
+                return if flag.use_forward {
                     Outcome::Forward(Status::InternalServerError)
                 } else {
                     Outcome::Error((Status::InternalServerError, ()))
@@ -51,23 +54,23 @@ where
             Some(user_context) => Arc::clone(user_context),
         };
 
-        if user_context.is_user && !F::allow_user() {
-            return if F::use_forward() {
+        if user_context.is_user && !flag.allow_user {
+            return if flag.use_forward {
                 Outcome::Forward(Status::Unauthorized)
             } else {
                 Outcome::Error((Status::Unauthorized, ()))
             };
-        } else if !user_context.is_user && !F::allow_visitor() {
-            return if F::use_forward() {
+        } else if !user_context.is_user && !flag.allow_visitor {
+            return if flag.use_forward {
                 Outcome::Forward(Status::Forbidden)
             } else {
                 Outcome::Error((Status::Forbidden, ()))
             };
         }
 
-        match req.rocket().state::<DepContext>() {
+        match req.rocket().state::<GlobalContext>() {
             None => {
-                if F::use_forward() {
+                if flag.use_forward {
                     Outcome::Forward(Status::InternalServerError)
                 } else {
                     Outcome::Error((Status::InternalServerError, ()))
@@ -77,12 +80,12 @@ where
                 match T::from_user_context(
                     Arc::clone(&user_context),
                     dep_context,
-                    F::feature_flag(),
+                    Arc::clone(&flag),
                     Some(req),
                 ) {
                     Ok(dep) => Outcome::Success(Self(dep, user_context, PhantomData)),
                     Err(_) => {
-                        if F::use_forward() {
+                        if flag.use_forward {
                             Outcome::Forward(Status::InternalServerError)
                         } else {
                             Outcome::Error((Status::InternalServerError, ()))

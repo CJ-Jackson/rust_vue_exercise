@@ -1,9 +1,10 @@
 use crate::db::SqliteClient;
-use crate::dependency::{DepContext, DependencyError, FromDepContext};
+use crate::dependency::{DependencyError, DependencyFlagData, FromGlobalContext, GlobalContext};
 use crate::user::model::{IdPassword, IdUsername};
 use error_stack::{Report, ResultExt};
 use rocket::Request;
 use rusqlite::named_params;
+use std::sync::Arc;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -159,10 +160,10 @@ impl UserRepository {
     }
 }
 
-impl FromDepContext for UserRepository {
-    fn from_dep_context<'r>(
-        dep_context: &DepContext,
-        _feature_flag: String,
+impl FromGlobalContext for UserRepository {
+    fn from_global_context<'r>(
+        dep_context: &GlobalContext,
+        _flag: Arc<DependencyFlagData>,
         _request: Option<&'r Request<'_>>,
     ) -> Result<Self, DependencyError> {
         Ok(Self::new(dep_context.sqlite_client.clone()))
