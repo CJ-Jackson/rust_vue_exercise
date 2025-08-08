@@ -146,3 +146,41 @@ impl FromUserContext for UserLoginService {
         ))
     }
 }
+
+pub struct UserRegisterService {
+    user_repository: UserRepository,
+}
+
+impl UserRegisterService {
+    pub fn new(user_repository: UserRepository) -> Self {
+        Self { user_repository }
+    }
+
+    pub fn register_user(&self, username: String, password: String) -> bool {
+        let password = match Password::hash_password(password) {
+            Ok(password) => password,
+            Err(_) => return false,
+        };
+        let password = match password.encode_to_msg_pack() {
+            Ok(password) => password,
+            Err(_) => return false,
+        };
+
+        self.user_repository
+            .register_user(username, password)
+            .is_ok()
+    }
+}
+
+impl FromUserContext for UserRegisterService {
+    async fn from_user_context<'r>(
+        _user_context: Arc<UserContext>,
+        global_context: &GlobalContext,
+        flag: Arc<DependencyFlagData>,
+        _request: Option<&'r Request<'_>>,
+    ) -> Result<Self, DependencyError> {
+        Ok(Self::new(
+            UserRepository::from_global_context(global_context, flag, None).await?,
+        ))
+    }
+}

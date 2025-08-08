@@ -139,7 +139,7 @@ impl UserRepository {
     pub fn register_user(
         &self,
         username: String,
-        password: String,
+        password: Box<[u8]>,
     ) -> Result<(), Report<UserRepositoryError>> {
         let conn = self
             .sqlite_client

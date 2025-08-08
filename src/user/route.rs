@@ -1,7 +1,7 @@
 use crate::html_base::ContextHtmlBuilder;
 use crate::user::dependency::UserDep;
 use crate::user::flag::{LoginFlag, LogoutFlag};
-use crate::user::service::UserLoginService;
+use crate::user::service::{UserLoginService, UserRegisterService};
 use maud::{Markup, html};
 use rocket::fairing::AdHoc;
 use rocket::form::Form;
@@ -43,13 +43,15 @@ pub async fn login(context_html_builder: UserDep<ContextHtmlBuilder, LoginFlag>)
     context_html_builder
         .0
         .attach_title(title.clone())
-        .set_current_tag("user".to_string())
         .attach_content(html! {
+            h1 .mt-3 { (title) }
             form method="post" .form {
                 input .form-item type="text" name="username" placeholder="Username";
                 input .form-item type="password" name="password" placeholder="Password";
                 button .btn .btn-sky-blue .mt-3 type="submit" { "Login" };
             }
+            p { "If you don't have an account, you can register by clicking the button below." }
+            a .btn .btn-sky-blue .mt-3 href="/user/register/" { "Register" }
         })
         .build()
 }
@@ -92,12 +94,72 @@ pub async fn logout<'a>(
     Flash::success(Redirect::to(uri!("/user")), "Logout succeeded.")
 }
 
+#[get("/register")]
+pub async fn register(context_html_builder: UserDep<ContextHtmlBuilder, LoginFlag>) -> Markup {
+    let title = "Register".to_string();
+    context_html_builder
+        .0
+        .attach_title(title.clone())
+        .attach_content(html! {
+            h1 .mt-3 { (title) }
+            form method="post" .form {
+                input .form-item type="text" name="username" placeholder="Username";
+                input .form-item type="password" name="password" placeholder="Password";
+                input .form-item type="password" name="password_confirm" placeholder="Confirm password";
+                button .btn .btn-sky-blue .mt-3 type="submit" { "Register" };
+            }
+        })
+        .build()
+}
+
+#[derive(FromForm)]
+pub struct UserRegisterForm {
+    #[field(validate = len(5..30))]
+    pub username: String,
+    #[field(validate = len(8..64))]
+    pub password: String,
+    #[field(validate = len(8..64))]
+    pub password_confirm: String,
+}
+
+#[post("/register", data = "<data>")]
+async fn register_post(
+    data: Form<UserRegisterForm>,
+    user_register_service: UserDep<UserRegisterService, LoginFlag>,
+) -> Flash<Redirect> {
+    if data.password != data.password_confirm {
+        return Flash::error(
+            Redirect::to(uri!("/user/register")),
+            "Passwords do not match.",
+        );
+    }
+
+    if user_register_service
+        .0
+        .register_user(data.username.clone(), data.password.clone())
+    {
+        Flash::success(Redirect::to(uri!("/user/login")), "Register succeeded.")
+    } else {
+        Flash::error(Redirect::to(uri!("/user/register")), "Register failed.")
+    }
+}
+
 pub struct UserRoute;
 
 impl UserRoute {
     pub fn adhoc() -> AdHoc {
         AdHoc::on_ignite("UserRoute", |r| async {
-            r.mount("/user", routes![display_user, login, login_post, logout])
+            r.mount(
+                "/user",
+                routes![
+                    display_user,
+                    login,
+                    login_post,
+                    logout,
+                    register,
+                    register_post
+                ],
+            )
         })
     }
 }
