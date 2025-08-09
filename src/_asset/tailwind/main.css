@@ -36,19 +36,15 @@ body {
     @apply bg-blue-400 dark:bg-blue-950;
 }
 
-.main-content, .nav-content {
-    @apply bg-white rounded-2xl dark:bg-gray-800 dark:text-white;
-}
-
 .nav-content {
-    @apply flex;
+    @apply flex bg-white dark:bg-gray-800 dark:text-white mb-3 px-7 py-7 mx-auto fixed top-0 left-0 right-0 z-10;
 
     .nav-home {
-        @apply flex-3 font-bold;
+        @apply flex-3 font-bold text-left;
     }
 
     .nav-item {
-        @apply flex-1;
+        @apply flex-1 text-center;
     }
 
     .nav-item-active {
@@ -56,8 +52,16 @@ body {
     }
 
     .nav-user {
-        @apply flex-3;
+        @apply flex-3 text-right;
     }
+}
+
+.content-wrapper {
+    @apply relative top-22;
+}
+
+.main-content {
+    @apply bg-white rounded-2xl dark:bg-gray-800 dark:text-white mt-3 px-7 py-7 mx-auto;
 }
 
 .bucket-list-item, .bucket-list-header, .bucket-form, .bucket-form-error {
@@ -81,7 +85,7 @@ body {
 }
 
 .flash-message {
-    @apply fixed bottom-0 left-0 right-0 text-white p-4 text-center;
+    @apply fixed bottom-0 left-0 right-0 text-white p-4 text-center z-10;
 }
 
 .flash-message-success {

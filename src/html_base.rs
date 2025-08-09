@@ -169,8 +169,10 @@ impl ContextHtmlBuilder {
         let new_content = html! {
             (parse_flash)
             (self.build_navigation())
-            div .container .main-content .mt-3 .px-7 .py-7 .mx-auto {
-                (content)
+            div .content-wrapper {
+                div .container .main-content {
+                    (content)
+                }
             }
         };
 
@@ -215,17 +217,23 @@ impl ContextHtmlBuilder {
     fn build_navigation(&self) -> Markup {
         let user_context = self.user_context.as_ref();
         html! {
-            div .container .nav-content .mt-3 .px-7 .py-7 .mx-auto {
-                a .nav-home href="/" { "Rust Vue Exercise, and more" }
+            nav .nav-content {
+                span .nav-home {
+                    a href="/" { "Rust Vue Exercise, and more" }
+                }
                 (self.parse_navigation(self.data.borrow().current_tag.clone()))
                 @if let Some(user_context) = user_context {
-                    @if user_context.is_user {
-                        a .nav-user href="/user/" { "Hello, " (user_context.username) }
-                    } @else {
-                        a .nav-user href="/user/login" { "You're a visitor, click here to login" }
+                    span .nav-user {
+                        @if user_context.is_user {
+                            a href="/user/" { "Hello, " (user_context.username) }
+                        } @else {
+                            a href="/user/login" { "You're a visitor, click here to login" }
+                        }
                     }
                 } @else {
-                    a .nav-user href="/user/login" { "Login" }
+                    span .nav-user {
+                        a .nav-user href="/user/login" { "Login" }
+                    }
                 }
             }
         }
@@ -236,11 +244,15 @@ impl ContextHtmlBuilder {
         for item in NavigationItem::navigations() {
             let html = if item.tag == tag {
                 html! {
-                    a .nav-item .nav-item-active href=(item.url) { (item.name) }
+                    span .nav-item .nav-item-active {
+                        a href=(item.url) { (item.name) }
+                    }
                 }
             } else {
                 html! {
-                    a .nav-item href=(item.url) { (item.name) }
+                    span .nav-item href=(item.url) {
+                        a href=(item.url) { (item.name) }
+                    }
                 }
             };
             output.push_str(html.into_string().as_str());
