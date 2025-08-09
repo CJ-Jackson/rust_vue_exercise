@@ -37,7 +37,7 @@ body {
 }
 
 .nav-content {
-    @apply flex bg-white dark:bg-gray-800 dark:text-white mb-3 px-7 py-7 mx-auto fixed top-0 left-0 right-0 z-10;
+    @apply flex bg-white dark:bg-gray-800 dark:text-white mb-3 px-7 py-7 mx-auto sticky top-0 left-0 right-0 z-10;
 
     .nav-home {
         @apply flex-3 font-bold text-left;
@@ -54,10 +54,6 @@ body {
     .nav-user {
         @apply flex-3 text-right;
     }
-}
-
-.content-wrapper {
-    @apply relative top-22;
 }
 
 .main-content {

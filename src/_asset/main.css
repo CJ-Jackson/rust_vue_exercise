@@ -265,7 +265,7 @@ body {
   }
 }
 .nav-content {
-  position: fixed;
+  position: sticky;
   top: calc(var(--spacing) * 0);
   right: calc(var(--spacing) * 0);
   left: calc(var(--spacing) * 0);
@@ -299,10 +299,6 @@ body {
     flex: 3;
     text-align: right;
   }
-}
-.content-wrapper {
-  position: relative;
-  top: calc(var(--spacing) * 22);
 }
 .main-content {
   margin-inline: auto;

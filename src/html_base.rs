@@ -250,7 +250,7 @@ impl ContextHtmlBuilder {
                 }
             } else {
                 html! {
-                    span .nav-item href=(item.url) {
+                    span .nav-item {
                         a href=(item.url) { (item.name) }
                     }
                 }
