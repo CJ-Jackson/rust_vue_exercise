@@ -40,6 +40,18 @@ impl GlobalContext {
             rocket.manage(dep_context)
         })
     }
+
+    /// Will not have a request
+    pub async fn inject<T: FromGlobalContext>(
+        &self,
+        flag: &Arc<DependencyFlagData>,
+    ) -> Result<T, DependencyError> {
+        let dependency_context = Box::pin(DependencyGlobalContext {
+            global_context: self,
+            request: None,
+        });
+        T::from_global_context(&dependency_context, Arc::clone(flag)).await
+    }
 }
 
 #[derive(Clone)]
