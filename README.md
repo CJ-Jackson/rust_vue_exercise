@@ -18,25 +18,23 @@ with DI, it just needs to implement one of the two traits (or both).
 ```rust
 pub trait FromGlobalContext: Sized {
     fn from_global_context<'r>(
-        global_context: &GlobalContext,
+        dependency_global_context: &'r DependencyGlobalContext<'r, '_>,
         flag: Arc<DependencyFlagData>,
-        request: Option<&'r Request<'_>>,
     ) -> impl Future<Output=Result<Self, DependencyError>> + Send;
 }
 
 pub trait FromUserContext: Sized {
     fn from_user_context<'r>(
-        user_context: Arc<UserContext>,
-        global_context: &GlobalContext,
+        dependency_user_context: &'r DependencyUserContext<'r, '_>,
         flag: Arc<DependencyFlagData>,
-        request: Option<&'r Request<'_>>,
     ) -> impl Future<Output=Result<Self, DependencyError>> + Send;
 }
 ```
 
-The `GlobalContext` is the context that is available to all requests, it holds the configuration and the database
-connection. The `UserContext` is the context that is hold information about the current user. The `DependencyFlagData`
-is the data used to determine which constructor to call or which database connection to use.
+The `DependencyGlobalContext` is the context that is available to all requests, it holds the configuration and the
+database connection. The `DependencyUserContext` is the superset of `DependencyGlobalContext` and hold information about
+the current user. The `DependencyFlagData` is the data used to determine which constructor to call or which database
+connection to use.
 
 The most interesting example of how I used DI is in `src/html_base.rs` and to inject the dependency into the route
 handler function with either `Dep<T, F = DefaultFlag>` (Global Context) or `UserDep<T, F = DefaultFlag>` (Plus User
