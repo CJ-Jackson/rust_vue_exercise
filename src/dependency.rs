@@ -46,11 +46,11 @@ impl GlobalContext {
         &self,
         flag: &Arc<DependencyFlagData>,
     ) -> Result<T, DependencyError> {
-        let dependency_context = Box::pin(DependencyGlobalContext {
+        let dependency_global_context = Box::pin(DependencyGlobalContext {
             global_context: self,
             request: None,
         });
-        T::from_global_context(&dependency_context, Arc::clone(flag)).await
+        T::from_global_context(&dependency_global_context, Arc::clone(flag)).await
     }
 }
 
@@ -138,11 +138,11 @@ where
                 }
             }
             Some(global_context) => {
-                let dependency_context = Box::pin(DependencyGlobalContext {
+                let dependency_global_context = Box::pin(DependencyGlobalContext {
                     global_context,
                     request: Some(req),
                 });
-                match T::from_global_context(&dependency_context, Arc::clone(&flag)).await {
+                match T::from_global_context(&dependency_global_context, Arc::clone(&flag)).await {
                     Ok(dep) => Outcome::Success(Self(dep, PhantomData)),
                     Err(_) => {
                         if flag.use_forward {
