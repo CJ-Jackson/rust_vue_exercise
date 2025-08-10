@@ -1,6 +1,6 @@
 use crate::dependency::{
     DefaultFlag, Dep, DependencyError, DependencyFlag, DependencyFlagData, DependencyGlobalContext,
-    GlobalContext,
+    FromGlobalContext, GlobalContext,
 };
 use crate::user::model::UserContext;
 use crate::user::service::UserCheckService;
@@ -15,6 +15,22 @@ pub struct DependencyUserContext<'r, 'life0> {
     pub global_context: &'r GlobalContext,
     pub request: Option<&'r Request<'life0>>,
     pub dependency_global_context: DependencyGlobalContext<'r, 'life0>,
+}
+
+impl DependencyUserContext<'_, '_> {
+    pub async fn inject<T: FromUserContext>(
+        &self,
+        flag: &Arc<DependencyFlagData>,
+    ) -> Result<T, DependencyError> {
+        T::from_user_context(self, Arc::clone(flag)).await
+    }
+
+    pub async fn inject_global<T: FromGlobalContext>(
+        &self,
+        flag: &Arc<DependencyFlagData>,
+    ) -> Result<T, DependencyError> {
+        self.dependency_global_context.inject(flag).await
+    }
 }
 
 pub trait FromUserContext: Sized {

@@ -71,7 +71,7 @@ impl UserCheckService {
 impl FromGlobalContext for UserCheckService {
     async fn from_global_context(
         dependency_global_context: &DependencyGlobalContext<'_, '_>,
-        feature_flag: Arc<DependencyFlagData>,
+        flag: Arc<DependencyFlagData>,
     ) -> Result<Self, DependencyError> {
         let request = dependency_global_context
             .request
@@ -79,7 +79,7 @@ impl FromGlobalContext for UserCheckService {
         let cookies = request.cookies();
 
         Ok(Self::new(
-            UserRepository::from_global_context(dependency_global_context, feature_flag).await?,
+            dependency_global_context.inject(&flag).await?,
             cookies.get("login-token").map(|c| c.value().to_string()),
         ))
     }
@@ -140,11 +140,7 @@ impl FromUserContext for UserLoginService {
         let cookies = request.cookies();
 
         Ok(Self::new(
-            UserRepository::from_global_context(
-                &dependency_user_context.dependency_global_context,
-                flag,
-            )
-            .await?,
+            dependency_user_context.inject_global(&flag).await?,
             cookies.get("login-token").map(|c| c.value().to_string()),
         ))
     }
@@ -181,11 +177,7 @@ impl FromUserContext for UserRegisterService {
         flag: Arc<DependencyFlagData>,
     ) -> Result<Self, DependencyError> {
         Ok(Self::new(
-            UserRepository::from_global_context(
-                &dependency_user_context.dependency_global_context,
-                flag,
-            )
-            .await?,
+            dependency_user_context.inject_global(&flag).await?,
         ))
     }
 }

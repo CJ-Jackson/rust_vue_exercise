@@ -84,6 +84,15 @@ pub struct DependencyGlobalContext<'r, 'life0> {
     pub request: Option<&'r Request<'life0>>,
 }
 
+impl DependencyGlobalContext<'_, '_> {
+    pub async fn inject<T: FromGlobalContext>(
+        &self,
+        flag: &Arc<DependencyFlagData>,
+    ) -> Result<T, DependencyError> {
+        T::from_global_context(self, Arc::clone(flag)).await
+    }
+}
+
 pub trait FromGlobalContext: Sized {
     fn from_global_context<'r>(
         dependency_global_context: &'r DependencyGlobalContext<'r, '_>,

@@ -294,9 +294,9 @@ impl FromUserContext for ContextHtmlBuilder {
         dependency_user_context: &DependencyUserContext<'_, '_>,
         flag: Arc<DependencyFlagData>,
     ) -> Result<Self, DependencyError> {
-        let flash_html_builder =
-            Self::from_global_context(&dependency_user_context.dependency_global_context, flag)
-                .await?;
-        Ok(flash_html_builder.set_user_context(Arc::clone(&dependency_user_context.user_context)))
+        Ok(dependency_user_context
+            .inject_global::<Self>(&flag)
+            .await?
+            .set_user_context(Arc::clone(&dependency_user_context.user_context)))
     }
 }
