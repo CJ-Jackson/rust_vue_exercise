@@ -1,8 +1,9 @@
-use crate::dependency::{DependencyError, DependencyFlagData, FromGlobalContext, GlobalContext};
-use crate::user::dependency::FromUserContext;
+use crate::dependency::{
+    DependencyError, DependencyFlagData, DependencyGlobalContext, FromGlobalContext,
+};
+use crate::user::dependency::{DependencyUserContext, FromUserContext};
 use crate::user::model::UserContext;
 use maud::{DOCTYPE, Markup, PreEscaped, html};
-use rocket::Request;
 use rocket::request::FlashMessage;
 use std::cell::RefCell;
 use std::sync::Arc;
@@ -263,11 +264,12 @@ impl ContextHtmlBuilder {
 
 impl FromGlobalContext for ContextHtmlBuilder {
     async fn from_global_context(
-        _global_context: &GlobalContext,
+        dependency_context: &DependencyGlobalContext<'_, '_>,
         _flag: Arc<DependencyFlagData>,
-        request: Option<&Request<'_>>,
     ) -> Result<Self, DependencyError> {
-        let request = request.ok_or(DependencyError::NeedsRequest)?;
+        let request = dependency_context
+            .request
+            .ok_or(DependencyError::NeedsRequest)?;
         let flash_message = request
             .guard::<Option<FlashMessage<'_>>>()
             .await
@@ -288,13 +290,13 @@ impl FromGlobalContext for ContextHtmlBuilder {
 }
 
 impl FromUserContext for ContextHtmlBuilder {
-    async fn from_user_context<'r>(
-        user_context: Arc<UserContext>,
-        global_context: &GlobalContext,
+    async fn from_user_context(
+        dependency_user_context: &DependencyUserContext<'_, '_>,
         flag: Arc<DependencyFlagData>,
-        request: Option<&'r Request<'_>>,
     ) -> Result<Self, DependencyError> {
-        let flash_html_builder = Self::from_global_context(global_context, flag, request).await?;
-        Ok(flash_html_builder.set_user_context(user_context))
+        let flash_html_builder =
+            Self::from_global_context(&dependency_user_context.dependency_global_context, flag)
+                .await?;
+        Ok(flash_html_builder.set_user_context(Arc::clone(&dependency_user_context.user_context)))
     }
 }

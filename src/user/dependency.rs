@@ -1,5 +1,6 @@
 use crate::dependency::{
-    DefaultFlag, Dep, DependencyError, DependencyFlag, DependencyFlagData, GlobalContext,
+    DefaultFlag, Dep, DependencyError, DependencyFlag, DependencyFlagData, DependencyGlobalContext,
+    GlobalContext,
 };
 use crate::user::model::UserContext;
 use crate::user::service::UserCheckService;
@@ -9,12 +10,17 @@ use rocket::request::{FromRequest, Outcome};
 use std::marker::PhantomData;
 use std::sync::Arc;
 
+pub struct DependencyUserContext<'r, 'life0> {
+    pub user_context: Arc<UserContext>,
+    pub global_context: &'r GlobalContext,
+    pub request: Option<&'r Request<'life0>>,
+    pub dependency_global_context: DependencyGlobalContext<'r, 'life0>,
+}
+
 pub trait FromUserContext: Sized {
     fn from_user_context<'r>(
-        user_context: Arc<UserContext>,
-        global_context: &GlobalContext,
+        dependency_user_context: &'r DependencyUserContext<'r, '_>,
         flag: Arc<DependencyFlagData>,
-        request: Option<&'r Request<'_>>,
     ) -> impl Future<Output = Result<Self, DependencyError>> + Send;
 }
 
@@ -77,14 +83,16 @@ where
                 }
             }
             Some(global_context) => {
-                match T::from_user_context(
-                    Arc::clone(&user_context),
+                let dependency_user_context = Box::pin(DependencyUserContext {
+                    user_context: Arc::clone(&user_context),
                     global_context,
-                    Arc::clone(&flag),
-                    Some(req),
-                )
-                .await
-                {
+                    request: Some(req),
+                    dependency_global_context: DependencyGlobalContext {
+                        global_context,
+                        request: Some(req),
+                    },
+                });
+                match T::from_user_context(&dependency_user_context, Arc::clone(&flag)).await {
                     Ok(dep) => Outcome::Success(Self(dep, user_context, PhantomData)),
                     Err(_) => {
                         if flag.use_forward {

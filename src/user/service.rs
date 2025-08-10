@@ -1,9 +1,10 @@
-use crate::dependency::{DependencyError, DependencyFlagData, FromGlobalContext, GlobalContext};
-use crate::user::dependency::FromUserContext;
+use crate::dependency::{
+    DependencyError, DependencyFlagData, DependencyGlobalContext, FromGlobalContext,
+};
+use crate::user::dependency::{DependencyUserContext, FromUserContext};
 use crate::user::model::{IdUsername, UserContext};
 use crate::user::password::Password;
 use crate::user::repository::UserRepository;
-use rocket::Request;
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -11,9 +12,8 @@ pub struct NoopService;
 
 impl FromGlobalContext for NoopService {
     async fn from_global_context(
-        _dep_context: &GlobalContext,
-        _feature_flag: Arc<DependencyFlagData>,
-        _request: Option<&Request<'_>>,
+        _dependency_global_context: &DependencyGlobalContext<'_, '_>,
+        _flag: Arc<DependencyFlagData>,
     ) -> Result<Self, DependencyError> {
         Ok(Self)
     }
@@ -21,10 +21,8 @@ impl FromGlobalContext for NoopService {
 
 impl FromUserContext for NoopService {
     async fn from_user_context(
-        _user_context: Arc<UserContext>,
-        _dep_context: &GlobalContext,
-        _feature_flag: Arc<DependencyFlagData>,
-        _request: Option<&Request<'_>>,
+        _dependency_user_context: &DependencyUserContext<'_, '_>,
+        _flag: Arc<DependencyFlagData>,
     ) -> Result<Self, DependencyError> {
         Ok(Self)
     }
@@ -72,15 +70,16 @@ impl UserCheckService {
 
 impl FromGlobalContext for UserCheckService {
     async fn from_global_context(
-        dep_context: &GlobalContext,
+        dependency_global_context: &DependencyGlobalContext<'_, '_>,
         feature_flag: Arc<DependencyFlagData>,
-        request: Option<&Request<'_>>,
     ) -> Result<Self, DependencyError> {
-        let request = request.ok_or(DependencyError::NeedsRequest)?;
+        let request = dependency_global_context
+            .request
+            .ok_or(DependencyError::NeedsRequest)?;
         let cookies = request.cookies();
 
         Ok(Self::new(
-            UserRepository::from_global_context(dep_context, feature_flag, None).await?,
+            UserRepository::from_global_context(dependency_global_context, feature_flag).await?,
             cookies.get("login-token").map(|c| c.value().to_string()),
         ))
     }
@@ -132,16 +131,20 @@ impl UserLoginService {
 
 impl FromUserContext for UserLoginService {
     async fn from_user_context(
-        _user_context: Arc<UserContext>,
-        global_context: &GlobalContext,
+        dependency_user_context: &DependencyUserContext<'_, '_>,
         flag: Arc<DependencyFlagData>,
-        request: Option<&Request<'_>>,
     ) -> Result<Self, DependencyError> {
-        let request = request.ok_or(DependencyError::NeedsRequest)?;
+        let request = dependency_user_context
+            .request
+            .ok_or(DependencyError::NeedsRequest)?;
         let cookies = request.cookies();
 
         Ok(Self::new(
-            UserRepository::from_global_context(global_context, flag, None).await?,
+            UserRepository::from_global_context(
+                &dependency_user_context.dependency_global_context,
+                flag,
+            )
+            .await?,
             cookies.get("login-token").map(|c| c.value().to_string()),
         ))
     }
@@ -173,14 +176,16 @@ impl UserRegisterService {
 }
 
 impl FromUserContext for UserRegisterService {
-    async fn from_user_context<'r>(
-        _user_context: Arc<UserContext>,
-        global_context: &GlobalContext,
+    async fn from_user_context(
+        dependency_user_context: &DependencyUserContext<'_, '_>,
         flag: Arc<DependencyFlagData>,
-        _request: Option<&'r Request<'_>>,
     ) -> Result<Self, DependencyError> {
         Ok(Self::new(
-            UserRepository::from_global_context(global_context, flag, None).await?,
+            UserRepository::from_global_context(
+                &dependency_user_context.dependency_global_context,
+                flag,
+            )
+            .await?,
         ))
     }
 }

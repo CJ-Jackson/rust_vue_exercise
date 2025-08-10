@@ -79,11 +79,15 @@ pub struct DefaultFlag;
 
 impl DependencyFlag for DefaultFlag {}
 
+pub struct DependencyGlobalContext<'r, 'life0> {
+    pub global_context: &'r GlobalContext,
+    pub request: Option<&'r Request<'life0>>,
+}
+
 pub trait FromGlobalContext: Sized {
     fn from_global_context<'r>(
-        global_context: &GlobalContext,
+        dependency_global_context: &'r DependencyGlobalContext<'r, '_>,
         flag: Arc<DependencyFlagData>,
-        request: Option<&'r Request<'_>>,
     ) -> impl Future<Output = Result<Self, DependencyError>> + Send;
 }
 
@@ -113,7 +117,11 @@ where
                 }
             }
             Some(global_context) => {
-                match T::from_global_context(global_context, Arc::clone(&flag), Some(req)).await {
+                let dependency_context = Box::pin(DependencyGlobalContext {
+                    global_context,
+                    request: Some(req),
+                });
+                match T::from_global_context(&dependency_context, Arc::clone(&flag)).await {
                     Ok(dep) => Outcome::Success(Self(dep, PhantomData)),
                     Err(_) => {
                         if flag.use_forward {
