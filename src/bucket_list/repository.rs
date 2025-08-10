@@ -93,13 +93,8 @@ impl BucketListRepository {
 impl FromGlobalContext for BucketListRepository {
     async fn from_global_context(
         dependency_global_context: &DependencyGlobalContext<'_, '_>,
-        _flag: Arc<DependencyFlagData>,
+        flag: Arc<DependencyFlagData>,
     ) -> Result<Self, DependencyError> {
-        Ok(Self::new(
-            dependency_global_context
-                .global_context
-                .sqlite_client
-                .clone(),
-        ))
+        Ok(Self::new(dependency_global_context.inject(&flag).await?))
     }
 }
