@@ -35,7 +35,6 @@ pub fn get_figment_for_other() -> Figment {
     Figment::new()
         .merge(Serialized::defaults(Config::default()))
         .merge(Toml::file("exercise.toml").nested())
-        .merge(Toml::file("exercise.local.toml").nested())
         .merge(
             Toml::file(var("EXERCISE_CONFIG_PATH").unwrap_or("exercise.local.toml".to_string()))
                 .nested(),
