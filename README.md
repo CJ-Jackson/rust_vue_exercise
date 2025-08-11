@@ -40,6 +40,8 @@ The most interesting example of how I used DI is in `src/html_base.rs` and to in
 handler function with either `Dep<T, F = DefaultFlag>` (Global Context) or `UserDep<T, F = DefaultFlag>` (Plus User
 Context and check permissions).
 
+**Update:** I've removed `flag`, as it can be easily expressed with the type system.
+
 ```rust
 #[get("/")]
 fn index(context_html_builder: UserDep<ContextHtmlBuilder>) -> Markup {
