@@ -65,12 +65,12 @@ pub trait DependencyFlag {
     const ALLOW_USER: bool = true;
     const ALLOW_VISITOR: bool = true;
 
-    fn build_flag_data() -> Arc<DependencyFlagData> {
-        Arc::new(DependencyFlagData {
+    fn build_flag_data() -> DependencyFlagData {
+        DependencyFlagData {
             use_forward: Self::USE_FORWARD,
             allow_user: Self::ALLOW_USER,
             allow_visitor: Self::ALLOW_VISITOR,
-        })
+        }
     }
 }
 
@@ -111,7 +111,7 @@ where
     type Error = ();
 
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
-        let flag = F::build_flag_data();
+        let flag = Box::pin(F::build_flag_data());
         match req.rocket().state::<GlobalContext>() {
             None => {
                 if flag.use_forward {

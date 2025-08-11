@@ -49,7 +49,7 @@ where
     type Error = ();
 
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
-        let flag = F::build_flag_data();
+        let flag = Box::pin(F::build_flag_data());
         let user_context = req
             .local_cache_async(async {
                 let user_service = req.guard::<Dep<UserCheckService>>().await.succeeded()?;
