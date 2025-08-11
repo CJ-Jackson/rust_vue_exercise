@@ -9,6 +9,8 @@ use std::ops::Deref;
 use std::sync::Arc;
 use thiserror::Error;
 
+pub type Alt<T, M = ()> = (T, PhantomData<M>);
+
 #[derive(Error, Debug)]
 pub enum DependencyError {
     #[error("Needs request")]
