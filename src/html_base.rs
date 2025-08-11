@@ -1,6 +1,4 @@
-use crate::dependency::{
-    DependencyError, DependencyFlagData, DependencyGlobalContext, FromGlobalContext,
-};
+use crate::dependency::{DependencyError, DependencyGlobalContext, FromGlobalContext};
 use crate::user::dependency::{DependencyUserContext, FromUserContext};
 use crate::user::model::UserContext;
 use maud::{DOCTYPE, Markup, PreEscaped, html};
@@ -265,7 +263,6 @@ impl ContextHtmlBuilder {
 impl FromGlobalContext for ContextHtmlBuilder {
     async fn from_global_context(
         dependency_context: &DependencyGlobalContext<'_, '_>,
-        _flag: Arc<DependencyFlagData>,
     ) -> Result<Self, DependencyError> {
         let request = dependency_context
             .request
@@ -292,10 +289,9 @@ impl FromGlobalContext for ContextHtmlBuilder {
 impl FromUserContext for ContextHtmlBuilder {
     async fn from_user_context(
         dependency_user_context: &DependencyUserContext<'_, '_>,
-        flag: Arc<DependencyFlagData>,
     ) -> Result<Self, DependencyError> {
         Ok(dependency_user_context
-            .inject_global::<Self>(&flag)
+            .inject_global::<Self>()
             .await?
             .set_user_context(Arc::clone(&dependency_user_context.user_context)))
     }

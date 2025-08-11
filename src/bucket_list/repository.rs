@@ -1,13 +1,10 @@
 use crate::bucket_list::model::{AddToBucketList, BucketListItem};
 use crate::db::SqliteClient;
-use crate::dependency::{
-    DependencyError, DependencyFlagData, DependencyGlobalContext, FromGlobalContext,
-};
+use crate::dependency::{DependencyError, DependencyGlobalContext, FromGlobalContext};
 use crate::error::ErrorStatus;
 use error_stack::{Report, ResultExt};
 use rocket::http::Status;
 use rusqlite::named_params;
-use std::sync::Arc;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -93,8 +90,7 @@ impl BucketListRepository {
 impl FromGlobalContext for BucketListRepository {
     async fn from_global_context(
         dependency_global_context: &DependencyGlobalContext<'_, '_>,
-        flag: Arc<DependencyFlagData>,
     ) -> Result<Self, DependencyError> {
-        Ok(Self::new(dependency_global_context.inject(&flag).await?))
+        Ok(Self::new(dependency_global_context.inject().await?))
     }
 }

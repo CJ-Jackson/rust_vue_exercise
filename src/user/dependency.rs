@@ -1,6 +1,6 @@
 use crate::dependency::{
-    DefaultFlag, Dep, DependencyError, DependencyFlag, DependencyFlagData, DependencyGlobalContext,
-    FromGlobalContext, GlobalContext,
+    DefaultFlag, Dep, DependencyError, DependencyFlag, DependencyGlobalContext, FromGlobalContext,
+    GlobalContext,
 };
 use crate::user::model::UserContext;
 use crate::user::service::UserCheckService;
@@ -18,25 +18,18 @@ pub struct DependencyUserContext<'r, 'life0> {
 }
 
 impl DependencyUserContext<'_, '_> {
-    pub async fn inject<T: FromUserContext>(
-        &self,
-        flag: &Arc<DependencyFlagData>,
-    ) -> Result<T, DependencyError> {
-        T::from_user_context(self, Arc::clone(flag)).await
+    pub async fn inject<T: FromUserContext>(&self) -> Result<T, DependencyError> {
+        T::from_user_context(self).await
     }
 
-    pub async fn inject_global<T: FromGlobalContext>(
-        &self,
-        flag: &Arc<DependencyFlagData>,
-    ) -> Result<T, DependencyError> {
-        self.dependency_global_context.inject(flag).await
+    pub async fn inject_global<T: FromGlobalContext>(&self) -> Result<T, DependencyError> {
+        self.dependency_global_context.inject().await
     }
 }
 
 pub trait FromUserContext: Sized {
     fn from_user_context<'r>(
         dependency_user_context: &'r DependencyUserContext<'r, '_>,
-        flag: Arc<DependencyFlagData>,
     ) -> impl Future<Output = Result<Self, DependencyError>> + Send;
 }
 
@@ -108,7 +101,7 @@ where
                         request: Some(req),
                     },
                 });
-                match T::from_user_context(&dependency_user_context, Arc::clone(&flag)).await {
+                match T::from_user_context(&dependency_user_context).await {
                     Ok(dep) => Outcome::Success(Self(dep, user_context, PhantomData)),
                     Err(_) => {
                         if flag.use_forward {

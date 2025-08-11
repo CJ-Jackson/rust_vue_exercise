@@ -1,6 +1,4 @@
-use crate::dependency::{
-    DependencyError, DependencyFlagData, DependencyGlobalContext, FromGlobalContext,
-};
+use crate::dependency::{DependencyError, DependencyGlobalContext, FromGlobalContext};
 use crate::error::{ExtraResultExt, FromIntoStackError};
 use crate::user::password::Password;
 use error_stack::{Report, ResultExt};
@@ -73,7 +71,6 @@ impl Clone for SqliteClient {
 impl FromGlobalContext for SqliteClient {
     async fn from_global_context(
         dependency_global_context: &DependencyGlobalContext<'_, '_>,
-        _flag: Arc<DependencyFlagData>,
     ) -> Result<Self, DependencyError> {
         Ok(dependency_global_context
             .global_context
