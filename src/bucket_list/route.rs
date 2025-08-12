@@ -1,6 +1,5 @@
 use crate::bucket_list::model::{AddToBucketList, BucketListItem};
 use crate::bucket_list::repository::{BucketListRepository, BucketListRepositoryError};
-use crate::bucket_list::validate::validate_add_to_bucket_list;
 use crate::dependency::Dep;
 use crate::error::{ErrorOutput, ErrorReportResponse};
 use crate::html_base::ContextHtmlBuilder;
@@ -98,9 +97,11 @@ pub async fn add_bucket_list(
     data: Json<AddToBucketList>,
     repo: Dep<BucketListRepository>,
 ) -> Result<Value, AddBucketListRouteError> {
-    validate_add_to_bucket_list(&data.0).map_err(|e| AddBucketListRouteError::Validate(e))?;
+    let data = data
+        .to_validated()
+        .map_err(|e| AddBucketListRouteError::Validate(e))?;
 
-    repo.add_to_bucket_list(&data.0)
+    repo.add_to_bucket_list(&data)
         .attach(ErrorOutput::Json)
         .map_err(|e| AddBucketListRouteError::Repo(ErrorReportResponse(e)))?;
 

@@ -1,3 +1,5 @@
+pub mod bools;
+
 use rocket::Request;
 use rocket::http::{Header, Status};
 use rocket::request::{FromRequest, Outcome};

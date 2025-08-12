@@ -1,15 +1,43 @@
+use error_stack::Report;
 use rocket::serde::json::Json;
 use serde::Serialize;
 use std::collections::HashMap;
+use std::error::Error;
 
-#[derive(Serialize)]
-struct ValidateErrorItem {
+pub trait ValidateErrorItemTrait: Sized + Send + Sync + 'static {
+    fn get_validate_error_item(&self) -> Option<ValidateErrorItem>;
+}
+
+impl<E> ValidateErrorItemTrait for Report<E>
+where
+    E: ValidateErrorItemTrait,
+{
+    fn get_validate_error_item(&self) -> Option<ValidateErrorItem> {
+        self.current_context().get_validate_error_item()
+    }
+}
+
+impl<T, E> ValidateErrorItemTrait for Result<T, Report<E>>
+where
+    E: ValidateErrorItemTrait,
+    T: Send + Sync + 'static,
+{
+    fn get_validate_error_item(&self) -> Option<ValidateErrorItem> {
+        if let Err(e) = self {
+            return e.get_validate_error_item();
+        }
+        None
+    }
+}
+
+#[derive(Serialize, Clone, Debug)]
+pub struct ValidateErrorItem {
     field_name: String,
     messages: Box<[String]>,
 }
 
 impl ValidateErrorItem {
-    fn from_vec(field_name: String, messages: Vec<String>) -> Option<Self> {
+    pub fn from_vec(field_name: String, messages: Vec<String>) -> Option<Self> {
         if messages.is_empty() {
             return None;
         }
@@ -18,6 +46,32 @@ impl ValidateErrorItem {
             field_name,
             messages: messages.into(),
         })
+    }
+}
+
+trait OptionSealed {}
+
+#[allow(private_bounds)]
+pub trait OptionValidateErrorItemTrait: OptionSealed {
+    fn then_err_report<F, E>(self, f: F) -> Result<(), Report<E>>
+    where
+        F: FnOnce(ValidateErrorItem) -> E,
+        E: Error + Send + Sync + 'static;
+}
+
+impl OptionSealed for Option<ValidateErrorItem> {}
+
+impl OptionValidateErrorItemTrait for Option<ValidateErrorItem> {
+    fn then_err_report<F, E>(self, f: F) -> Result<(), Report<E>>
+    where
+        F: FnOnce(ValidateErrorItem) -> E,
+        E: Error + Send + Sync + 'static,
+    {
+        if let Some(item) = self {
+            Err(Report::new(f(item)))
+        } else {
+            Ok(())
+        }
     }
 }
 
@@ -42,6 +96,13 @@ impl ValidationErrorsBuilder {
         }
     }
 
+    pub fn add_item_from_trait<T: ValidateErrorItemTrait>(&mut self, item: T) -> T {
+        if let Some(item) = item.get_validate_error_item() {
+            self.0.push(item);
+        }
+        item
+    }
+
     fn build(self) -> ValidationErrorResponse {
         ValidationErrorResponse(Json(self.0.into()))
     }
@@ -55,6 +116,7 @@ impl ValidationErrorsBuilder {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct ValidationErrorsMergeBuilder(HashMap<String, Box<[ValidateErrorItem]>>);
 
 impl ValidationErrorsMergeBuilder {

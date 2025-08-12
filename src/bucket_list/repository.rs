@@ -1,4 +1,4 @@
-use crate::bucket_list::model::{AddToBucketList, BucketListItem};
+use crate::bucket_list::model::{AddToBucketListValidated, BucketListItem};
 use crate::db::SqliteClient;
 use crate::dependency::{DependencyError, DependencyGlobalContext, FromGlobalContext};
 use crate::error::ErrorStatus;
@@ -66,7 +66,7 @@ impl BucketListRepository {
 
     pub fn add_to_bucket_list(
         &self,
-        add_to_bucket_list: &AddToBucketList,
+        add_to_bucket_list: &AddToBucketListValidated,
     ) -> Result<(), Report<BucketListRepositoryError>> {
         let conn = self
             .sqlite_client
@@ -77,8 +77,8 @@ impl BucketListRepository {
         conn.execute(
             include_str!("_sql/add_to_bucket_list.sql"),
             named_params! {
-                ":name": add_to_bucket_list.name,
-                ":description": add_to_bucket_list.description,
+                ":name": add_to_bucket_list.name.as_str(),
+                ":description": add_to_bucket_list.description.as_str(),
             },
         )
         .change_context(BucketListRepositoryError::QueryError)?;
