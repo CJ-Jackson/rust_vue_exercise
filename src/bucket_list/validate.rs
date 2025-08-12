@@ -1,4 +1,3 @@
-use crate::utils::bools::BoolHelper;
 use crate::validation::{OptionValidateErrorItemTrait, ValidateErrorItem, ValidateErrorItemTrait};
 use error_stack::Report;
 use thiserror::Error;
@@ -22,15 +21,10 @@ impl Name {
         let field_name = field_name.unwrap_or("name".to_string());
         let name_count = name.graphemes(true).count();
 
-        name.is_empty().do_call(|| {
-            message.push("Name is required".to_string());
-        });
-        (name_count < 5).do_call(|| {
-            message.push("Name must be at least 5 characters".to_string());
-        });
-        (name_count > 20).do_call(|| {
-            message.push("Name must be at most 20 characters".to_string());
-        });
+        name.is_empty()
+            .then(|| message.push("Name is required".to_string()));
+        (name_count < 5).then(|| message.push("Name must be at least 5 characters".to_string()));
+        (name_count > 20).then(|| message.push("Name must be at most 20 characters".to_string()));
 
         ValidateErrorItem::from_vec(field_name, message).then_err_report(|i| NameError(i))?;
         Ok(Name(name))
@@ -63,15 +57,13 @@ impl Description {
         let field_name = field_name.unwrap_or("description".to_string());
         let description_count = description.graphemes(true).count();
 
-        description.is_empty().do_call(|| {
-            message.push("Description is required".to_string());
-        });
-        (description_count < 5).do_call(|| {
-            message.push("Description must be at least 5 characters".to_string());
-        });
-        (description_count > 100).do_call(|| {
-            message.push("Description must be at most 100 characters".to_string());
-        });
+        description
+            .is_empty()
+            .then(|| message.push("Description is required".to_string()));
+        (description_count < 5)
+            .then(|| message.push("Description must be at least 5 characters".to_string()));
+        (description_count > 100)
+            .then(|| message.push("Description must be at most 100 characters".to_string()));
 
         ValidateErrorItem::from_vec(field_name, message)
             .then_err_report(|i| DescriptionError(i))?;

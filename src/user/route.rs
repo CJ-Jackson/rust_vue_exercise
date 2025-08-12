@@ -1,7 +1,10 @@
 use crate::html_base::ContextHtmlBuilder;
 use crate::user::dependency::UserDep;
 use crate::user::flag::{LoginFlag, LogoutFlag};
+use crate::user::model::UserRegisterFormValidated;
 use crate::user::service::{UserLoginService, UserRegisterService};
+use crate::user::validate::{Password, Username};
+use crate::validation::{ValidationErrorResponse, ValidationErrorsBuilder};
 use maud::{Markup, html};
 use rocket::fairing::AdHoc;
 use rocket::form::Form;
@@ -114,12 +117,37 @@ pub async fn register(context_html_builder: UserDep<ContextHtmlBuilder, LoginFla
 
 #[derive(FromForm)]
 pub struct UserRegisterForm {
-    #[field(validate = len(5..30))]
     pub username: String,
-    #[field(validate = len(8..64))]
     pub password: String,
-    #[field(validate = len(8..64))]
     pub password_confirm: String,
+}
+
+impl UserRegisterForm {
+    pub fn to_validated(&self) -> Result<UserRegisterFormValidated, ValidationErrorResponse> {
+        let mut builder = ValidationErrorsBuilder::new();
+
+        let username = builder
+            .add_item_from_trait(Username::parse(self.username.clone(), None))
+            .unwrap_or_default();
+        let password = builder
+            .add_item_from_trait(Password::parse(self.password.clone(), None, None))
+            .unwrap_or_default();
+        let password_confirm = builder
+            .add_item_from_trait(Password::parse(
+                self.password_confirm.clone(),
+                Some("password-confirm".to_string()),
+                Some(&password),
+            ))
+            .unwrap_or_default();
+
+        builder.build_result()?;
+
+        Ok(UserRegisterFormValidated {
+            username,
+            password,
+            password_confirm,
+        })
+    }
 }
 
 #[post("/register", data = "<data>")]
@@ -127,20 +155,22 @@ async fn register_post(
     data: Form<UserRegisterForm>,
     user_register_service: UserDep<UserRegisterService, LoginFlag>,
 ) -> Flash<Redirect> {
-    if data.password != data.password_confirm {
-        return Flash::error(
+    let data = data.to_validated();
+    match data {
+        Ok(data) => {
+            if user_register_service.0.register_user(
+                data.username.as_str().to_string(),
+                data.password.as_str().to_string(),
+            ) {
+                Flash::success(Redirect::to(uri!("/user/login")), "Register succeeded.")
+            } else {
+                Flash::error(Redirect::to(uri!("/user/register")), "Register failed.")
+            }
+        }
+        Err(err) => Flash::error(
             Redirect::to(uri!("/user/register")),
-            "Passwords do not match.",
-        );
-    }
-
-    if user_register_service
-        .0
-        .register_user(data.username.clone(), data.password.clone())
-    {
-        Flash::success(Redirect::to(uri!("/user/login")), "Register succeeded.")
-    } else {
-        Flash::error(Redirect::to(uri!("/user/register")), "Register failed.")
+            format!("Registration failed: {}", err.to_string()),
+        ),
     }
 }
 

@@ -1,3 +1,5 @@
+use crate::user::validate::{Password, Username};
+
 #[derive(Debug)]
 pub struct UserContext {
     pub id: i64,
@@ -13,4 +15,10 @@ pub struct IdPassword {
 pub struct IdUsername {
     pub id: i64,
     pub username: String,
+}
+
+pub struct UserRegisterFormValidated {
+    pub username: Username,
+    pub password: Password,
+    pub password_confirm: Password,
 }

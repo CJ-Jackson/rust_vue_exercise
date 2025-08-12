@@ -3,6 +3,7 @@ use rocket::serde::json::Json;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::error::Error;
+use std::fmt::Display;
 
 pub trait ValidateErrorItemTrait: Sized + Send + Sync + 'static {
     fn get_validate_error_item(&self) -> Option<ValidateErrorItem>;
@@ -79,9 +80,28 @@ impl OptionValidateErrorItemTrait for Option<ValidateErrorItem> {
 #[response(status = 422)]
 pub struct ValidationErrorResponse(Json<Box<[ValidateErrorItem]>>);
 
+impl Display for ValidationErrorResponse {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Ok(for item in &self.0.0 {
+            write!(f, "{}: {}\n", item.field_name, item.messages.join(", "))?
+        })
+    }
+}
+
 #[derive(Responder)]
 #[response(status = 422)]
 pub struct ValidationErrorMergedResponse(Json<HashMap<String, Box<[ValidateErrorItem]>>>);
+
+impl Display for ValidationErrorMergedResponse {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Ok(for (name, items) in &self.0.0 {
+            write!(f, "{}:\n", name)?;
+            for item in items {
+                write!(f, "{}: {}\n", item.field_name, item.messages.join(", "))?
+            }
+        })
+    }
+}
 
 pub struct ValidationErrorsBuilder(Vec<ValidateErrorItem>);
 

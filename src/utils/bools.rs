@@ -25,15 +25,6 @@ pub trait BoolHelper: Sized + Sealed {
     {
         self.then_err(f).map_err(Report::new)
     }
-
-    fn do_call<F>(self, f: F)
-    where
-        F: FnOnce(),
-    {
-        if self.get_sealed_value() {
-            f()
-        }
-    }
 }
 
 impl Sealed for bool {
@@ -57,14 +48,5 @@ mod tests {
     fn then_err() {
         assert!(false.then_err(|| TestError).is_ok());
         assert!(true.then_err(|| TestError).is_err());
-    }
-
-    #[test]
-    fn do_call() {
-        let mut hit = false;
-        false.do_call(|| hit = true);
-        assert!(!hit);
-        true.do_call(|| hit = true);
-        assert!(hit);
     }
 }
