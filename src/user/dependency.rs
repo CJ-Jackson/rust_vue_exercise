@@ -4,6 +4,7 @@ use crate::dependency::{
 };
 use crate::user::model::UserContext;
 use crate::user::service::UserCheckService;
+use error_stack::Report;
 use rocket::Request;
 use rocket::http::Status;
 use rocket::request::{FromRequest, Outcome};
@@ -18,11 +19,11 @@ pub struct DependencyUserContext<'r, 'life0> {
 }
 
 impl DependencyUserContext<'_, '_> {
-    pub async fn inject<T: FromUserContext>(&self) -> Result<T, DependencyError> {
+    pub async fn inject<T: FromUserContext>(&self) -> Result<T, Report<DependencyError>> {
         T::from_user_context(self).await
     }
 
-    pub async fn inject_global<T: FromGlobalContext>(&self) -> Result<T, DependencyError> {
+    pub async fn inject_global<T: FromGlobalContext>(&self) -> Result<T, Report<DependencyError>> {
         self.dependency_global_context.inject().await
     }
 }
@@ -30,7 +31,7 @@ impl DependencyUserContext<'_, '_> {
 pub trait FromUserContext: Sized {
     fn from_user_context<'r>(
         dependency_user_context: &'r DependencyUserContext<'r, '_>,
-    ) -> impl Future<Output = Result<Self, DependencyError>> + Send;
+    ) -> impl Future<Output = Result<Self, Report<DependencyError>>> + Send;
 }
 
 pub struct UserDependencyGuard<T, F = DefaultFlag>(pub T, pub Arc<UserContext>, PhantomData<F>)

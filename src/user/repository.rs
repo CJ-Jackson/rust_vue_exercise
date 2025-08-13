@@ -161,7 +161,7 @@ impl UserRepository {
 impl FromGlobalContext for UserRepository {
     async fn from_global_context(
         dependency_global_context: &DependencyGlobalContext<'_, '_>,
-    ) -> Result<Self, DependencyError> {
+    ) -> Result<Self, Report<DependencyError>> {
         Ok(Self::new(dependency_global_context.inject().await?))
     }
 }

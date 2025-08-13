@@ -3,25 +3,10 @@ use crate::user::dependency::{DependencyUserContext, FromUserContext};
 use crate::user::model::{IdUsername, UserContext};
 use crate::user::password::Password;
 use crate::user::repository::UserRepository;
+use error_stack::Report;
 use uuid::Uuid;
 
 pub struct NoopService;
-
-impl FromGlobalContext for NoopService {
-    async fn from_global_context(
-        _dependency_global_context: &DependencyGlobalContext<'_, '_>,
-    ) -> Result<Self, DependencyError> {
-        Ok(Self)
-    }
-}
-
-impl FromUserContext for NoopService {
-    async fn from_user_context(
-        _dependency_user_context: &DependencyUserContext<'_, '_>,
-    ) -> Result<Self, DependencyError> {
-        Ok(Self)
-    }
-}
 
 pub struct UserCheckService {
     user_repository: UserRepository,
@@ -60,22 +45,6 @@ impl UserCheckService {
         }
 
         None
-    }
-}
-
-impl FromGlobalContext for UserCheckService {
-    async fn from_global_context(
-        dependency_global_context: &DependencyGlobalContext<'_, '_>,
-    ) -> Result<Self, DependencyError> {
-        let request = dependency_global_context
-            .request
-            .ok_or(DependencyError::NeedsRequest)?;
-        let cookies = request.cookies();
-
-        Ok(Self::new(
-            dependency_global_context.inject().await?,
-            cookies.get("login-token").map(|c| c.value().to_string()),
-        ))
     }
 }
 
@@ -123,22 +92,6 @@ impl UserLoginService {
     }
 }
 
-impl FromUserContext for UserLoginService {
-    async fn from_user_context(
-        dependency_user_context: &DependencyUserContext<'_, '_>,
-    ) -> Result<Self, DependencyError> {
-        let request = dependency_user_context
-            .request
-            .ok_or(DependencyError::NeedsRequest)?;
-        let cookies = request.cookies();
-
-        Ok(Self::new(
-            dependency_user_context.inject_global().await?,
-            cookies.get("login-token").map(|c| c.value().to_string()),
-        ))
-    }
-}
-
 pub struct UserRegisterService {
     user_repository: UserRepository,
 }
@@ -164,10 +117,58 @@ impl UserRegisterService {
     }
 }
 
+impl FromGlobalContext for NoopService {
+    async fn from_global_context(
+        _dependency_global_context: &DependencyGlobalContext<'_, '_>,
+    ) -> Result<Self, Report<DependencyError>> {
+        Ok(Self)
+    }
+}
+
+impl FromUserContext for NoopService {
+    async fn from_user_context(
+        _dependency_user_context: &DependencyUserContext<'_, '_>,
+    ) -> Result<Self, Report<DependencyError>> {
+        Ok(Self)
+    }
+}
+
+impl FromGlobalContext for UserCheckService {
+    async fn from_global_context(
+        dependency_global_context: &DependencyGlobalContext<'_, '_>,
+    ) -> Result<Self, Report<DependencyError>> {
+        let request = dependency_global_context
+            .request
+            .ok_or(DependencyError::NeedsRequest)?;
+        let cookies = request.cookies();
+
+        Ok(Self::new(
+            dependency_global_context.inject().await?,
+            cookies.get("login-token").map(|c| c.value().to_string()),
+        ))
+    }
+}
+
+impl FromUserContext for UserLoginService {
+    async fn from_user_context(
+        dependency_user_context: &DependencyUserContext<'_, '_>,
+    ) -> Result<Self, Report<DependencyError>> {
+        let request = dependency_user_context
+            .request
+            .ok_or(DependencyError::NeedsRequest)?;
+        let cookies = request.cookies();
+
+        Ok(Self::new(
+            dependency_user_context.inject_global().await?,
+            cookies.get("login-token").map(|c| c.value().to_string()),
+        ))
+    }
+}
+
 impl FromUserContext for UserRegisterService {
     async fn from_user_context(
         dependency_user_context: &DependencyUserContext<'_, '_>,
-    ) -> Result<Self, DependencyError> {
+    ) -> Result<Self, Report<DependencyError>> {
         Ok(Self::new(dependency_user_context.inject_global().await?))
     }
 }

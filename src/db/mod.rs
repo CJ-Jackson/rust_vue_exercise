@@ -5,6 +5,7 @@ use error_stack::{Report, ResultExt};
 use rusqlite::{Connection, named_params};
 use std::sync::{Arc, Mutex};
 use thiserror::Error;
+use tokio::sync::OnceCell;
 
 #[derive(Error, Debug)]
 pub enum SqliteClientError {
@@ -68,13 +69,25 @@ impl Clone for SqliteClient {
     }
 }
 
+static SQLITE_CLIENT_PIN: OnceCell<SqliteClient> = OnceCell::const_new();
+
 impl FromGlobalContext for SqliteClient {
     async fn from_global_context(
         dependency_global_context: &DependencyGlobalContext<'_, '_>,
-    ) -> Result<Self, DependencyError> {
-        Ok(dependency_global_context
-            .global_context
-            .sqlite_client
-            .clone())
+    ) -> Result<Self, Report<DependencyError>> {
+        let sqlite_client = SQLITE_CLIENT_PIN
+            .get_or_try_init(async || {
+                Self::new(
+                    dependency_global_context
+                        .global_context
+                        .config
+                        .sqlite_path
+                        .clone(),
+                )
+                .change_context(DependencyError::Other("Could not start SQLITE".to_string()))
+            })
+            .await?;
+
+        Ok(sqlite_client.clone())
     }
 }

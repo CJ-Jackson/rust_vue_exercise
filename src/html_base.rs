@@ -1,6 +1,7 @@
 use crate::dependency::{DependencyError, DependencyGlobalContext, FromGlobalContext};
 use crate::user::dependency::{DependencyUserContext, FromUserContext};
 use crate::user::model::UserContext;
+use error_stack::Report;
 use maud::{DOCTYPE, Markup, PreEscaped, html};
 use rocket::request::FlashMessage;
 use std::cell::RefCell;
@@ -263,7 +264,7 @@ impl ContextHtmlBuilder {
 impl FromGlobalContext for ContextHtmlBuilder {
     async fn from_global_context(
         dependency_context: &DependencyGlobalContext<'_, '_>,
-    ) -> Result<Self, DependencyError> {
+    ) -> Result<Self, Report<DependencyError>> {
         let request = dependency_context
             .request
             .ok_or(DependencyError::NeedsRequest)?;
@@ -289,7 +290,7 @@ impl FromGlobalContext for ContextHtmlBuilder {
 impl FromUserContext for ContextHtmlBuilder {
     async fn from_user_context(
         dependency_user_context: &DependencyUserContext<'_, '_>,
-    ) -> Result<Self, DependencyError> {
+    ) -> Result<Self, Report<DependencyError>> {
         Ok(dependency_user_context
             .inject_global::<Self>()
             .await?

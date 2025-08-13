@@ -1,5 +1,5 @@
 use crate::config::{Config, get_figment_for_other};
-use crate::db::SqliteClient;
+use error_stack::Report;
 use rocket::Request;
 use rocket::fairing::AdHoc;
 use rocket::http::Status;
@@ -21,7 +21,6 @@ pub enum DependencyError {
 
 pub struct GlobalContext {
     pub config: Arc<Config>,
-    pub sqlite_client: SqliteClient,
 }
 
 impl GlobalContext {
@@ -31,20 +30,14 @@ impl GlobalContext {
                 .extract::<Arc<Config>>()
                 .expect("Failed to extract config");
 
-            let sqlite_client =
-                SqliteClient::new(config.sqlite_path.clone()).expect("Failed to connect to sqlite");
-
-            let dep_context = GlobalContext {
-                config,
-                sqlite_client,
-            };
+            let dep_context = GlobalContext { config };
 
             rocket.manage(dep_context)
         })
     }
 
     /// Will not have a request
-    pub async fn inject<T: FromGlobalContext>(&self) -> Result<T, DependencyError> {
+    pub async fn inject<T: FromGlobalContext>(&self) -> Result<T, Report<DependencyError>> {
         let dependency_global_context = Box::pin(DependencyGlobalContext {
             global_context: self,
             request: None,
@@ -84,7 +77,7 @@ pub struct DependencyGlobalContext<'r, 'life0> {
 }
 
 impl DependencyGlobalContext<'_, '_> {
-    pub async fn inject<T: FromGlobalContext>(&self) -> Result<T, DependencyError> {
+    pub async fn inject<T: FromGlobalContext>(&self) -> Result<T, Report<DependencyError>> {
         T::from_global_context(self).await
     }
 }
@@ -92,7 +85,7 @@ impl DependencyGlobalContext<'_, '_> {
 pub trait FromGlobalContext: Sized {
     fn from_global_context<'r>(
         dependency_global_context: &'r DependencyGlobalContext<'r, '_>,
-    ) -> impl Future<Output = Result<Self, DependencyError>> + Send;
+    ) -> impl Future<Output = Result<Self, Report<DependencyError>>> + Send;
 }
 
 pub struct DependencyGuard<T, F = DefaultFlag>(pub T, PhantomData<F>)
