@@ -22,19 +22,22 @@ impl Username {
         field_name: Option<String>,
     ) -> Result<Self, Report<UsernameError>> {
         let mut message: Vec<String> = vec![];
-        let field_name = field_name.unwrap_or("name".to_string());
-        let username_count = username.graphemes(true).count();
+        let field_name = field_name.unwrap_or("username".to_string());
 
-        username
-            .is_empty()
-            .then(|| message.push("Username cannot be empty".to_string()));
-        (username_count < 5)
-            .then(|| message.push("Username must be at least 5 characters".to_string()));
-        (username_count > 30)
-            .then(|| message.push("Username must be at most 30 characters".to_string()));
+        let mut check_count = true;
+        username.is_empty().then(|| {
+            message.push(format!("{} cannot be empty", &field_name));
+            check_count = false;
+        });
+        check_count.then(|| {
+            let username_count = username.graphemes(true).count();
+            (username_count < 5)
+                .then(|| message.push(format!("{} must be at least 5 characters", &field_name)));
+            (username_count > 30)
+                .then(|| message.push(format!("{} must be at most 30 characters", &field_name)));
+        });
 
         ValidateErrorItem::from_vec(field_name, message).then_err_report(|s| UsernameError(s))?;
-
         Ok(Self(username))
     }
 
@@ -64,21 +67,27 @@ impl Password {
     ) -> Result<Self, Report<PasswordError>> {
         let mut message: Vec<String> = vec![];
         let field_name = field_name.unwrap_or("password".to_string());
-        let password_count = password.graphemes(true).count();
 
         match password_confirmation {
             Some(password_confirmation) => {
                 (password != password_confirmation.as_str())
-                    .then(|| message.push("Password confirmation does not match".to_string()));
+                    .then(|| message.push(format!("{} does not match", &field_name)));
             }
             None => {
-                password
-                    .is_empty()
-                    .then(|| message.push("Password cannot be empty".to_string()));
-                (password_count < 8)
-                    .then(|| message.push("Password must be at least 8 characters".to_string()));
-                (password_count > 64)
-                    .then(|| message.push("Password must be at most 64 characters".to_string()));
+                let mut check_count = true;
+                password.is_empty().then(|| {
+                    message.push(format!("{} cannot be empty", &field_name));
+                    check_count = false;
+                });
+                check_count.then(|| {
+                    let password_count = password.graphemes(true).count();
+                    (password_count < 8).then(|| {
+                        message.push(format!("{} must be at least 8 characters", &field_name));
+                    });
+                    (password_count > 64).then(|| {
+                        message.push(format!("{} must be at most 64 characters", &field_name))
+                    });
+                });
             }
         }
 
@@ -88,5 +97,87 @@ impl Password {
 
     pub fn as_str(&self) -> &str {
         &self.0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod username {
+        use super::*;
+
+        #[test]
+        fn test_username_parse() {
+            let username = Username::parse("Hello".to_string(), None);
+            assert!(username.is_ok());
+        }
+
+        #[test]
+        fn test_username_parse_error_empty_string() {
+            let username = Username::parse("".to_string(), None);
+            assert!(username.is_err());
+        }
+
+        #[test]
+        fn test_username_parse_error_too_short() {
+            let username = Username::parse("a".to_string(), None);
+            assert!(username.is_err());
+        }
+
+        #[test]
+        fn test_username_parse_error_too_long() {
+            let username_str = "a".repeat(31);
+            let username = Username::parse(username_str, None);
+            assert!(username.is_err());
+        }
+    }
+
+    mod password {
+        use super::*;
+        #[test]
+        fn test_password_parse() {
+            let password = Password::parse("Hello World".to_string(), None, None);
+            assert!(password.is_ok());
+        }
+
+        #[test]
+        fn test_password_parse_error_empty_string() {
+            let password = Password::parse("".to_string(), None, None);
+            assert!(password.is_err());
+        }
+
+        #[test]
+        fn test_password_parse_error_too_short() {
+            let password = Password::parse("a".to_string(), None, None);
+            assert!(password.is_err());
+        }
+
+        #[test]
+        fn test_password_parse_error_too_long() {
+            let password_str = "a".repeat(65);
+            let password = Password::parse(password_str, None, None);
+            assert!(password.is_err());
+        }
+
+        #[test]
+        fn test_password_parse_error_password_confirmation_mismatch() {
+            let password = Password::parse(
+                "Hello World".to_string(),
+                None,
+                Some(&Password("Hello".to_string())),
+            );
+            assert!(password.is_err());
+        }
+
+        #[test]
+        fn test_password_parse_error_password_confirmation_match() {
+            let password = Password::parse(
+                "Hello World".to_string(),
+                None,
+                Some(&Password("Hello World".to_string())),
+            );
+            assert!(password.is_ok());
+        }
     }
 }
