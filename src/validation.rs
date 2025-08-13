@@ -83,7 +83,7 @@ pub struct ValidationErrorResponse(Json<Box<[ValidateErrorItem]>>);
 impl Display for ValidationErrorResponse {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         Ok(for item in &self.0.0 {
-            write!(f, "{}\n", item.messages.join(", "))?
+            write!(f, "{};\n", item.messages.join(", "))?
         })
     }
 }
@@ -96,7 +96,7 @@ impl Display for ValidationErrorMergedResponse {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         Ok(for (_, items) in &self.0.0 {
             for item in items {
-                write!(f, "{}\n", item.messages.join(", "))?
+                write!(f, "{};\n", item.messages.join(", "))?
             }
         })
     }
