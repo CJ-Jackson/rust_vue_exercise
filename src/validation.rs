@@ -80,6 +80,25 @@ impl OptionValidateErrorItemTrait for Option<ValidateErrorItem> {
 #[response(status = 422)]
 pub struct ValidationErrorResponse(Json<Box<[ValidateErrorItem]>>);
 
+impl ValidationErrorResponse {
+    pub fn as_map(&self) -> HashMap<String, Box<[&ValidateErrorItem]>> {
+        let mut map = HashMap::new();
+        for item in &self.0.0 {
+            match map.get(&item.field_name) {
+                None => {
+                    map.insert(item.field_name.clone(), vec![item].into_boxed_slice());
+                }
+                Some(value) => {
+                    let mut value_map = value.to_vec();
+                    value_map.push(item);
+                    map.insert(item.field_name.clone(), value_map.into_boxed_slice());
+                }
+            }
+        }
+        map
+    }
+}
+
 impl Display for ValidationErrorResponse {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         Ok(for item in &self.0.0 {
@@ -91,6 +110,27 @@ impl Display for ValidationErrorResponse {
 #[derive(Responder)]
 #[response(status = 422)]
 pub struct ValidationErrorMergedResponse(Json<HashMap<String, Box<[ValidateErrorItem]>>>);
+
+impl ValidationErrorMergedResponse {
+    pub fn as_map(&self) -> HashMap<String, Box<[&ValidateErrorItem]>> {
+        let mut map = HashMap::new();
+        for (name, items) in &self.0.0 {
+            for item in items {
+                match map.get(&item.field_name) {
+                    None => {
+                        map.insert(name.clone(), vec![item].into_boxed_slice());
+                    }
+                    Some(value) => {
+                        let mut value_map = value.to_vec();
+                        value_map.push(item);
+                        map.insert(name.clone(), value_map.into_boxed_slice());
+                    }
+                }
+            }
+        }
+        map
+    }
+}
 
 impl Display for ValidationErrorMergedResponse {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
