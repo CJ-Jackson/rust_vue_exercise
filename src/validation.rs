@@ -89,8 +89,8 @@ impl ValidationErrorResponse {
                     map.insert(item.field_name.clone(), item.clone());
                 }
                 Some(value) => {
-                    let current_messages = value.messages.clone().to_vec();
-                    let new_messages = item.messages.clone().to_vec();
+                    let current_messages = value.messages.clone();
+                    let new_messages = item.messages.clone();
                     let merge_message = current_messages
                         .into_iter()
                         .chain(new_messages.into_iter())
@@ -130,8 +130,8 @@ impl ValidationErrorMergedResponse {
                         map.insert(item.field_name.clone(), item.clone());
                     }
                     Some(value) => {
-                        let current_messages = value.messages.clone().to_vec();
-                        let new_messages = item.messages.clone().to_vec();
+                        let current_messages = value.messages.clone();
+                        let new_messages = item.messages.clone();
                         let merge_message = current_messages
                             .into_iter()
                             .chain(new_messages.into_iter())
