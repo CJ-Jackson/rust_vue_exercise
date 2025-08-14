@@ -114,16 +114,16 @@ pub struct ValidationErrorMergedResponse(Json<HashMap<String, Box<[ValidateError
 impl ValidationErrorMergedResponse {
     pub fn as_map(&self) -> HashMap<String, Box<[&ValidateErrorItem]>> {
         let mut map = HashMap::new();
-        for (name, items) in &self.0.0 {
+        for (_, items) in &self.0.0 {
             for item in items {
                 match map.get(&item.field_name) {
                     None => {
-                        map.insert(name.clone(), vec![item].into_boxed_slice());
+                        map.insert(item.field_name.clone(), vec![item].into_boxed_slice());
                     }
                     Some(value) => {
                         let mut value_map = value.to_vec();
                         value_map.push(item);
-                        map.insert(name.clone(), value_map.into_boxed_slice());
+                        map.insert(item.field_name.clone(), value_map.into_boxed_slice());
                     }
                 }
             }
