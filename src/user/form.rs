@@ -44,17 +44,17 @@ impl UserRegisterForm {
     pub fn html_form(
         title: String,
         context_html_builder: &ContextHtmlBuilder,
-        user_registration_form: Option<UserRegisterForm>,
+        user_register_form: Option<UserRegisterForm>,
         errors: Option<HashMap<String, ValidateErrorItem>>,
     ) -> Markup {
-        let user_registration_form = user_registration_form.unwrap_or_default();
+        let user_register_form = user_register_form.unwrap_or_default();
         let errors = errors.unwrap_or_default();
         context_html_builder
             .attach_title(title.clone())
             .attach_content(html! {
             h1 .mt-3 { (title) }
             form method="post" .form {
-                input .form-item type="text" name="username" placeholder="Username" value=(user_registration_form.username);
+                input .form-item type="text" name="username" placeholder="Username" value=(user_register_form.username);
                 (errors.get("username").html())
                 input .form-item type="password" name="password" placeholder="Password";
                 (errors.get("password").html())
