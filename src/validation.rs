@@ -81,17 +81,26 @@ impl OptionValidateErrorItemTrait for Option<ValidateErrorItem> {
 pub struct ValidationErrorResponse(Json<Box<[ValidateErrorItem]>>);
 
 impl ValidationErrorResponse {
-    pub fn as_map(&self) -> HashMap<String, Box<[&ValidateErrorItem]>> {
+    pub fn as_map(&self) -> HashMap<String, ValidateErrorItem> {
         let mut map = HashMap::new();
         for item in &self.0.0 {
             match map.get(&item.field_name) {
                 None => {
-                    map.insert(item.field_name.clone(), vec![item].into_boxed_slice());
+                    map.insert(item.field_name.clone(), item.clone());
                 }
                 Some(value) => {
-                    let mut value_map = value.to_vec();
-                    value_map.push(item);
-                    map.insert(item.field_name.clone(), value_map.into_boxed_slice());
+                    let current_messages = value.messages.clone().to_vec();
+                    let new_messages = item.messages.clone().to_vec();
+                    let merge_message = current_messages
+                        .into_iter()
+                        .chain(new_messages.into_iter())
+                        .collect::<Vec<_>>()
+                        .into_boxed_slice();
+                    let new_item = ValidateErrorItem {
+                        field_name: item.field_name.clone(),
+                        messages: merge_message,
+                    };
+                    map.insert(item.field_name.clone(), new_item);
                 }
             }
         }
@@ -112,18 +121,27 @@ impl Display for ValidationErrorResponse {
 pub struct ValidationErrorMergedResponse(Json<HashMap<String, Box<[ValidateErrorItem]>>>);
 
 impl ValidationErrorMergedResponse {
-    pub fn as_map(&self) -> HashMap<String, Box<[&ValidateErrorItem]>> {
+    pub fn as_map(&self) -> HashMap<String, ValidateErrorItem> {
         let mut map = HashMap::new();
         for (_, items) in &self.0.0 {
             for item in items {
                 match map.get(&item.field_name) {
                     None => {
-                        map.insert(item.field_name.clone(), vec![item].into_boxed_slice());
+                        map.insert(item.field_name.clone(), item.clone());
                     }
                     Some(value) => {
-                        let mut value_map = value.to_vec();
-                        value_map.push(item);
-                        map.insert(item.field_name.clone(), value_map.into_boxed_slice());
+                        let current_messages = value.messages.clone().to_vec();
+                        let new_messages = item.messages.clone().to_vec();
+                        let merge_message = current_messages
+                            .into_iter()
+                            .chain(new_messages.into_iter())
+                            .collect::<Vec<_>>()
+                            .into_boxed_slice();
+                        let new_item = ValidateErrorItem {
+                            field_name: item.field_name.clone(),
+                            messages: merge_message,
+                        };
+                        map.insert(item.field_name.clone(), new_item);
                     }
                 }
             }
