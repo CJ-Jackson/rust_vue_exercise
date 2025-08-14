@@ -1,10 +1,8 @@
 use crate::html_base::ContextHtmlBuilder;
 use crate::user::dependency::UserDep;
 use crate::user::flag::{LoginFlag, LogoutFlag};
-use crate::user::model::UserRegisterFormValidated;
+use crate::user::form::UserRegisterForm;
 use crate::user::service::{UserLoginService, UserRegisterService};
-use crate::user::validate::{Password, Username};
-use crate::validation::{ValidationErrorResponse, ValidationErrorsBuilder};
 use maud::{Markup, html};
 use rocket::fairing::AdHoc;
 use rocket::form::Form;
@@ -99,78 +97,45 @@ pub async fn logout<'a>(
 
 #[get("/register")]
 pub async fn register(context_html_builder: UserDep<ContextHtmlBuilder, LoginFlag>) -> Markup {
-    let title = "Register".to_string();
-    context_html_builder
-        .0
-        .attach_title(title.clone())
-        .attach_content(html! {
-            h1 .mt-3 { (title) }
-            form method="post" .form {
-                input .form-item type="text" name="username" placeholder="Username";
-                input .form-item type="password" name="password" placeholder="Password";
-                input .form-item type="password" name="password_confirm" placeholder="Confirm password";
-                button .btn .btn-sky-blue .mt-3 type="submit" { "Register" };
-            }
-        })
-        .build()
+    UserRegisterForm::html_form("Register".to_string(), &context_html_builder.0, None, None)
 }
 
-#[derive(FromForm)]
-pub struct UserRegisterForm {
-    pub username: String,
-    pub password: String,
-    pub password_confirm: String,
-}
-
-impl UserRegisterForm {
-    pub fn to_validated(&self) -> Result<UserRegisterFormValidated, ValidationErrorResponse> {
-        let mut builder = ValidationErrorsBuilder::new();
-
-        let username = builder
-            .add_item_from_trait(Username::parse(self.username.clone(), None))
-            .unwrap_or_default();
-        let password = builder
-            .add_item_from_trait(Password::parse(self.password.clone(), None, None))
-            .unwrap_or_default();
-        let password_confirm = builder
-            .add_item_from_trait(Password::parse(
-                self.password_confirm.clone(),
-                Some("password-confirm".to_string()),
-                Some(&password),
-            ))
-            .unwrap_or_default();
-
-        builder.build_result()?;
-
-        Ok(UserRegisterFormValidated {
-            username,
-            password,
-            password_confirm,
-        })
-    }
+#[derive(Responder)]
+enum RegisterPostResponse {
+    Redirect(Flash<Redirect>),
+    Markup(Markup),
 }
 
 #[post("/register", data = "<data>")]
 async fn register_post(
     data: Form<UserRegisterForm>,
     user_register_service: UserDep<UserRegisterService, LoginFlag>,
-) -> Flash<Redirect> {
-    let data = data.to_validated();
-    match data {
+    context_html_builder: UserDep<ContextHtmlBuilder>,
+) -> RegisterPostResponse {
+    let validated_data = data.to_validated();
+    match validated_data {
         Ok(data) => {
             if user_register_service.0.register_user(
                 data.username.as_str().to_string(),
                 data.password.as_str().to_string(),
             ) {
-                Flash::success(Redirect::to(uri!("/user/login")), "Register succeeded.")
+                RegisterPostResponse::Redirect(Flash::success(
+                    Redirect::to(uri!("/user/login")),
+                    "Register succeeded.",
+                ))
             } else {
-                Flash::error(Redirect::to(uri!("/user/register")), "Register failed.")
+                RegisterPostResponse::Redirect(Flash::error(
+                    Redirect::to(uri!("/user/register")),
+                    "Register failed.",
+                ))
             }
         }
-        Err(err) => Flash::error(
-            Redirect::to(uri!("/user/register")),
-            format!("Registration failed: {}", err.to_string()),
-        ),
+        Err(err) => RegisterPostResponse::Markup(UserRegisterForm::html_form(
+            "Register".to_string(),
+            &context_html_builder.0,
+            Some(data.clone()),
+            Some(err.as_map()),
+        )),
     }
 }
 

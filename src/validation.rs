@@ -1,4 +1,5 @@
 use error_stack::Report;
+use maud::{Markup, html};
 use rocket::serde::json::Json;
 use serde::Serialize;
 use std::collections::HashMap;
@@ -35,6 +36,36 @@ where
 pub struct ValidateErrorItem {
     field_name: String,
     messages: Box<[String]>,
+}
+
+impl ValidateErrorItem {
+    pub fn html(&self) -> Markup {
+        html! {
+            ul .validation-error-list {
+                @for message in &self.messages {
+                    li .validation-error-message { (message) }
+                }
+            }
+        }
+    }
+}
+
+trait MarkupSealed {}
+
+#[allow(private_bounds)]
+pub trait ValidationOptionMarkup: MarkupSealed {
+    fn html(&self) -> Markup;
+}
+
+impl MarkupSealed for Option<&ValidateErrorItem> {}
+
+impl ValidationOptionMarkup for Option<&ValidateErrorItem> {
+    fn html(&self) -> Markup {
+        match self {
+            Some(item) => item.html(),
+            None => html! {},
+        }
+    }
 }
 
 impl ValidateErrorItem {

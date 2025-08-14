@@ -103,3 +103,11 @@ body {
         @apply mb-2 text-lg dark:border-blue-950 border-b-gray-600 border-2 rounded pl-2;
     }
 }
+
+.validation-error-list {
+    @apply text-red-500 mb-2;
+
+    .validation-error-message {
+        @apply text-sm list-disc list-inside;
+    }
+}

@@ -23,18 +23,27 @@ impl Username {
     ) -> Result<Self, Report<UsernameError>> {
         let mut message: Vec<String> = vec![];
         let field_name = field_name.unwrap_or("username".to_string());
+        let field_name_no_underscore = field_name.replace("_", " ");
 
         let mut check_count = true;
         username.is_empty().then(|| {
-            message.push(format!("{} cannot be empty", &field_name));
+            message.push(format!("{} cannot be empty", &field_name_no_underscore));
             check_count = false;
         });
         check_count.then(|| {
             let username_count = username.graphemes(true).count();
-            (username_count < 5)
-                .then(|| message.push(format!("{} must be at least 5 characters", &field_name)));
-            (username_count > 30)
-                .then(|| message.push(format!("{} must be at most 30 characters", &field_name)));
+            (username_count < 5).then(|| {
+                message.push(format!(
+                    "{} must be at least 5 characters",
+                    &field_name_no_underscore
+                ))
+            });
+            (username_count > 30).then(|| {
+                message.push(format!(
+                    "{} must be at most 30 characters",
+                    &field_name_no_underscore
+                ))
+            });
         });
 
         ValidateErrorItem::from_vec(field_name, message).then_err_report(|s| UsernameError(s))?;
@@ -67,25 +76,32 @@ impl Password {
     ) -> Result<Self, Report<PasswordError>> {
         let mut message: Vec<String> = vec![];
         let field_name = field_name.unwrap_or("password".to_string());
+        let field_name_no_underscore = field_name.replace("_", " ");
 
         match password_confirmation {
             Some(password_confirmation) => {
                 (password != password_confirmation.as_str())
-                    .then(|| message.push(format!("{} does not match", &field_name)));
+                    .then(|| message.push(format!("{} does not match", &field_name_no_underscore)));
             }
             None => {
                 let mut check_count = true;
                 password.is_empty().then(|| {
-                    message.push(format!("{} cannot be empty", &field_name));
+                    message.push(format!("{} cannot be empty", &field_name_no_underscore));
                     check_count = false;
                 });
                 check_count.then(|| {
                     let password_count = password.graphemes(true).count();
                     (password_count < 8).then(|| {
-                        message.push(format!("{} must be at least 8 characters", &field_name));
+                        message.push(format!(
+                            "{} must be at least 8 characters",
+                            &field_name_no_underscore
+                        ));
                     });
                     (password_count > 64).then(|| {
-                        message.push(format!("{} must be at most 64 characters", &field_name))
+                        message.push(format!(
+                            "{} must be at most 64 characters",
+                            &field_name_no_underscore
+                        ))
                     });
                 });
             }
