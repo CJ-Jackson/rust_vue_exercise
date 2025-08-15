@@ -262,13 +262,21 @@ trait StrSealed {
 #[allow(private_bounds)]
 pub trait StrValidationExtension: StrSealed {
     fn has_special_chars(&self) -> bool;
+    fn count_special_chars(&self) -> usize;
     fn has_ascii_uppercase(&self) -> bool;
+    fn count_ascii_uppercase(&self) -> usize;
     fn has_ascii_lowercase(&self) -> bool;
+    fn count_ascii_lowercase(&self) -> usize;
     fn has_ascii_uppercase_and_lowercase(&self) -> bool {
         self.has_ascii_uppercase() && self.has_ascii_lowercase()
     }
+    fn count_ascii_uppercase_and_lowercase(&self) -> usize {
+        self.count_ascii_uppercase() + self.count_ascii_lowercase()
+    }
     fn has_ascii_digit(&self) -> bool;
+    fn count_ascii_digit(&self) -> usize;
     fn has_ascii_alphanumeric(&self) -> bool;
+    fn count_ascii_alphanumeric(&self) -> usize;
 }
 
 impl StrSealed for &str {}
@@ -278,20 +286,42 @@ impl StrValidationExtension for &str {
         self.chars().any(|c| Self::SPECIAL_CHARS.contains(&c))
     }
 
+    fn count_special_chars(&self) -> usize {
+        self.chars()
+            .filter(|c| Self::SPECIAL_CHARS.contains(c))
+            .count() as usize
+    }
+
     fn has_ascii_uppercase(&self) -> bool {
         self.chars().any(|c| c.is_ascii_uppercase())
+    }
+
+    fn count_ascii_uppercase(&self) -> usize {
+        self.chars().filter(|c| c.is_ascii_uppercase()).count()
     }
 
     fn has_ascii_lowercase(&self) -> bool {
         self.chars().any(|c| c.is_ascii_lowercase())
     }
 
+    fn count_ascii_lowercase(&self) -> usize {
+        self.chars().filter(|c| c.is_ascii_lowercase()).count()
+    }
+
     fn has_ascii_digit(&self) -> bool {
         self.chars().any(|c| c.is_ascii_digit())
     }
 
+    fn count_ascii_digit(&self) -> usize {
+        self.chars().filter(|c| c.is_ascii_digit()).count()
+    }
+
     fn has_ascii_alphanumeric(&self) -> bool {
         self.chars().any(|c| c.is_ascii_alphanumeric())
+    }
+
+    fn count_ascii_alphanumeric(&self) -> usize {
+        self.chars().filter(|c| c.is_ascii_alphanumeric()).count()
     }
 }
 
@@ -302,19 +332,39 @@ impl StrValidationExtension for String {
         self.as_str().has_special_chars()
     }
 
+    fn count_special_chars(&self) -> usize {
+        self.as_str().count_special_chars()
+    }
+
     fn has_ascii_uppercase(&self) -> bool {
         self.as_str().has_ascii_uppercase()
+    }
+
+    fn count_ascii_uppercase(&self) -> usize {
+        self.as_str().count_ascii_uppercase()
     }
 
     fn has_ascii_lowercase(&self) -> bool {
         self.as_str().has_ascii_lowercase()
     }
 
+    fn count_ascii_lowercase(&self) -> usize {
+        self.as_str().count_ascii_lowercase()
+    }
+
     fn has_ascii_digit(&self) -> bool {
         self.as_str().has_ascii_digit()
     }
 
+    fn count_ascii_digit(&self) -> usize {
+        self.as_str().count_ascii_digit()
+    }
+
     fn has_ascii_alphanumeric(&self) -> bool {
         self.as_str().has_ascii_alphanumeric()
+    }
+
+    fn count_ascii_alphanumeric(&self) -> usize {
+        self.as_str().count_ascii_alphanumeric()
     }
 }
