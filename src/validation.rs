@@ -251,3 +251,70 @@ impl ValidationErrorsMergeBuilder {
         }
     }
 }
+
+trait StrSealed {
+    const SPECIAL_CHARS: [char; 30] = [
+        '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '=', '+', '[', ']', '{', '}',
+        '\\', '|', ';', ':', '\'', '"', ',', '.', '<', '>', '/', '?',
+    ];
+}
+
+#[allow(private_bounds)]
+pub trait StrValidationExtension: StrSealed {
+    fn has_special_chars(&self) -> bool;
+    fn has_ascii_uppercase(&self) -> bool;
+    fn has_ascii_lowercase(&self) -> bool;
+    fn has_ascii_uppercase_and_lowercase(&self) -> bool {
+        self.has_ascii_uppercase() && self.has_ascii_lowercase()
+    }
+    fn has_ascii_digit(&self) -> bool;
+    fn has_ascii_alphanumeric(&self) -> bool;
+}
+
+impl StrSealed for &str {}
+
+impl StrValidationExtension for &str {
+    fn has_special_chars(&self) -> bool {
+        self.chars().any(|c| Self::SPECIAL_CHARS.contains(&c))
+    }
+
+    fn has_ascii_uppercase(&self) -> bool {
+        self.chars().any(|c| c.is_ascii_uppercase())
+    }
+
+    fn has_ascii_lowercase(&self) -> bool {
+        self.chars().any(|c| c.is_ascii_lowercase())
+    }
+
+    fn has_ascii_digit(&self) -> bool {
+        self.chars().any(|c| c.is_ascii_digit())
+    }
+
+    fn has_ascii_alphanumeric(&self) -> bool {
+        self.chars().any(|c| c.is_ascii_alphanumeric())
+    }
+}
+
+impl StrSealed for String {}
+
+impl StrValidationExtension for String {
+    fn has_special_chars(&self) -> bool {
+        self.as_str().has_special_chars()
+    }
+
+    fn has_ascii_uppercase(&self) -> bool {
+        self.as_str().has_ascii_uppercase()
+    }
+
+    fn has_ascii_lowercase(&self) -> bool {
+        self.as_str().has_ascii_lowercase()
+    }
+
+    fn has_ascii_digit(&self) -> bool {
+        self.as_str().has_ascii_digit()
+    }
+
+    fn has_ascii_alphanumeric(&self) -> bool {
+        self.as_str().has_ascii_alphanumeric()
+    }
+}

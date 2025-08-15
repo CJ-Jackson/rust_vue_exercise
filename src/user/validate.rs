@@ -1,4 +1,6 @@
-use crate::validation::{OptionValidateErrorItemTrait, ValidateErrorItem, ValidateErrorItemTrait};
+use crate::validation::{
+    OptionValidateErrorItemTrait, StrValidationExtension, ValidateErrorItem, ValidateErrorItemTrait,
+};
 use error_stack::Report;
 use thiserror::Error;
 use unicode_segmentation::UnicodeSegmentation;
@@ -84,12 +86,12 @@ impl Password {
                     .then(|| message.push(format!("{} does not match", &field_name_no_underscore)));
             }
             None => {
-                let mut check_count = true;
+                let mut check_count_and_chars = true;
                 password.is_empty().then(|| {
                     message.push(format!("{} cannot be empty", &field_name_no_underscore));
-                    check_count = false;
+                    check_count_and_chars = false;
                 });
-                check_count.then(|| {
+                check_count_and_chars.then(|| {
                     let password_count = password.graphemes(true).count();
                     (password_count < 8).then(|| {
                         message.push(format!(
@@ -101,8 +103,26 @@ impl Password {
                         message.push(format!(
                             "{} must be at most 64 characters",
                             &field_name_no_underscore
-                        ))
+                        ));
                     });
+                    (!password.has_ascii_uppercase_and_lowercase()).then(|| {
+                        message.push(format!(
+                            "{} must contain at least one uppercase and lowercase letter",
+                            &field_name_no_underscore
+                        ));
+                    });
+                    (!password.has_special_chars()).then(|| {
+                        message.push(format!(
+                            "{} must contain at least one special character",
+                            &field_name_no_underscore
+                        ));
+                    });
+                    (!password.has_ascii_digit()).then(|| {
+                        message.push(format!(
+                            "{} must contain at least one digit",
+                            &field_name_no_underscore
+                        ));
+                    })
                 });
             }
         }
@@ -153,7 +173,7 @@ mod tests {
         use super::*;
         #[test]
         fn test_password_parse() {
-            let password = Password::parse("Hello World".to_string(), None, None);
+            let password = Password::parse("Hello@Wor1d".to_string(), None, None);
             assert!(password.is_ok());
         }
 
@@ -179,7 +199,7 @@ mod tests {
         #[test]
         fn test_password_parse_error_password_confirmation_mismatch() {
             let password = Password::parse(
-                "Hello World".to_string(),
+                "Hello@Wor1d".to_string(),
                 None,
                 Some(&Password("Hello".to_string())),
             );
@@ -189,11 +209,35 @@ mod tests {
         #[test]
         fn test_password_parse_error_password_confirmation_match() {
             let password = Password::parse(
-                "Hello World".to_string(),
+                "Hello@Wor1d".to_string(),
                 None,
-                Some(&Password("Hello World".to_string())),
+                Some(&Password("Hello@Wor1d".to_string())),
             );
             assert!(password.is_ok());
+        }
+
+        #[test]
+        fn test_password_parse_error_lower_case_only() {
+            let password = Password::parse("hello@wor1d".to_string(), None, None);
+            assert!(password.is_err());
+        }
+
+        #[test]
+        fn test_password_parse_error_upper_case_only() {
+            let password = Password::parse("HELLO@WOR1D".to_string(), None, None);
+            assert!(password.is_err());
+        }
+
+        #[test]
+        fn test_password_parse_error_special_char_only() {
+            let password = Password::parse("!@#$%^&*()".to_string(), None, None);
+            assert!(password.is_err());
+        }
+
+        #[test]
+        fn test_password_parse_error_digit_only() {
+            let password = Password::parse("1234567890".to_string(), None, None);
+            assert!(password.is_err());
         }
     }
 }
