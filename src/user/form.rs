@@ -22,14 +22,10 @@ impl UserRegisterForm {
             .add_item_from_trait(Username::parse(self.username.clone(), None))
             .unwrap_or_default();
         let password = builder
-            .add_item_from_trait(Password::parse(self.password.clone(), None, None))
+            .add_item_from_trait(Password::parse(self.password.clone(), None))
             .unwrap_or_default();
         let password_confirm = builder
-            .add_item_from_trait(Password::parse(
-                self.password_confirm.clone(),
-                Some("password_confirm".to_string()),
-                Some(&password),
-            ))
+            .add_item_from_trait(password.parse_confirm(self.password_confirm.clone(), None))
             .unwrap_or_default();
 
         builder.build_result()?;
@@ -52,17 +48,17 @@ impl UserRegisterForm {
         context_html_builder
             .attach_title(title.clone())
             .attach_content(html! {
-            h1 .mt-3 { (title) }
-            form method="post" .form {
-                input .form-item type="text" name="username" placeholder="Username" value=(user_register_form.username);
-                (errors.get("username").as_html())
-                input .form-item type="password" name="password" placeholder="Password";
-                (errors.get("password").as_html())
-                input .form-item type="password" name="password_confirm" placeholder="Confirm password";
-                (errors.get("password_confirm").as_html())
-                button .btn .btn-sky-blue .mt-3 type="submit" { "Register" };
-            }
-        })
+                h1 .mt-3 { (title) }
+                form method="post" .form {
+                    input .form-item type="text" name="username" placeholder="Username" value=(user_register_form.username);
+                    (errors.get("username").as_html())
+                    input .form-item type="password" name="password" placeholder="Password";
+                    (errors.get("password").as_html())
+                    input .form-item type="password" name="password_confirm" placeholder="Confirm password";
+                    (errors.get("password_confirm").as_html())
+                    button .btn .btn-sky-blue .mt-3 type="submit" { "Register" };
+                }
+            })
             .build()
     }
 }

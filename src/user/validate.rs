@@ -74,61 +74,68 @@ impl Password {
     pub fn parse(
         password: String,
         field_name: Option<String>,
-        password_confirmation: Option<&Password>,
     ) -> Result<Self, Report<PasswordError>> {
         let mut message: Vec<String> = vec![];
         let field_name = field_name.unwrap_or("password".to_string());
         let field_name_no_underscore = field_name.replace("_", " ");
 
-        match password_confirmation {
-            Some(password_confirmation) => {
-                (password != password_confirmation.as_str())
-                    .then(|| message.push(format!("{} does not match", &field_name_no_underscore)));
-            }
-            None => {
-                let mut check_count_and_chars = true;
-                password.is_empty().then(|| {
-                    message.push(format!("{} cannot be empty", &field_name_no_underscore));
-                    check_count_and_chars = false;
-                });
-                check_count_and_chars.then(|| {
-                    let password_count = password.graphemes(true).count();
-                    (password_count < 8).then(|| {
-                        message.push(format!(
-                            "{} must be at least 8 characters",
-                            &field_name_no_underscore
-                        ));
-                    });
-                    (password_count > 64).then(|| {
-                        message.push(format!(
-                            "{} must be at most 64 characters",
-                            &field_name_no_underscore
-                        ));
-                    });
-                    (!password.has_ascii_uppercase_and_lowercase()).then(|| {
-                        message.push(format!(
-                            "{} must contain at least one uppercase and lowercase letter",
-                            &field_name_no_underscore
-                        ));
-                    });
-                    (!password.has_special_chars()).then(|| {
-                        message.push(format!(
-                            "{} must contain at least one special character",
-                            &field_name_no_underscore
-                        ));
-                    });
-                    (!password.has_ascii_digit()).then(|| {
-                        message.push(format!(
-                            "{} must contain at least one digit",
-                            &field_name_no_underscore
-                        ));
-                    })
-                });
-            }
-        }
+        let mut check_count_and_chars = true;
+        password.is_empty().then(|| {
+            message.push(format!("{} cannot be empty", &field_name_no_underscore));
+            check_count_and_chars = false;
+        });
+        check_count_and_chars.then(|| {
+            let password_count = password.graphemes(true).count();
+            (password_count < 8).then(|| {
+                message.push(format!(
+                    "{} must be at least 8 characters",
+                    &field_name_no_underscore
+                ));
+            });
+            (password_count > 64).then(|| {
+                message.push(format!(
+                    "{} must be at most 64 characters",
+                    &field_name_no_underscore
+                ));
+            });
+            (!password.has_ascii_uppercase_and_lowercase()).then(|| {
+                message.push(format!(
+                    "{} must contain at least one uppercase and lowercase letter",
+                    &field_name_no_underscore
+                ));
+            });
+            (!password.has_special_chars()).then(|| {
+                message.push(format!(
+                    "{} must contain at least one special character",
+                    &field_name_no_underscore
+                ));
+            });
+            (!password.has_ascii_digit()).then(|| {
+                message.push(format!(
+                    "{} must contain at least one digit",
+                    &field_name_no_underscore
+                ));
+            })
+        });
 
         ValidateErrorItem::from_vec(field_name, message).then_err_report(|s| PasswordError(s))?;
         Ok(Self(password))
+    }
+
+    pub fn parse_confirm(
+        &self,
+        password_confirm: String,
+        field_name: Option<String>,
+    ) -> Result<Self, Report<PasswordError>> {
+        let mut message: Vec<String> = vec![];
+        let field_name = field_name.unwrap_or("password_confirm".to_string());
+        let field_name_no_underscore = field_name.replace("_", " ");
+
+        (password_confirm != self.as_str())
+            .then(|| message.push(format!("{} does not match", &field_name_no_underscore)));
+
+        ValidateErrorItem::from_vec(field_name, message).then_err_report(|s| PasswordError(s))?;
+        Ok(Self(password_confirm))
     }
 
     pub fn as_str(&self) -> &str {
@@ -173,71 +180,65 @@ mod tests {
         use super::*;
         #[test]
         fn test_password_parse() {
-            let password = Password::parse("Hello@Wor1d".to_string(), None, None);
+            let password = Password::parse("Hello@Wor1d".to_string(), None);
             assert!(password.is_ok());
         }
 
         #[test]
         fn test_password_parse_error_empty_string() {
-            let password = Password::parse("".to_string(), None, None);
+            let password = Password::parse("".to_string(), None);
             assert!(password.is_err());
         }
 
         #[test]
         fn test_password_parse_error_too_short() {
-            let password = Password::parse("a".to_string(), None, None);
+            let password = Password::parse("a".to_string(), None);
             assert!(password.is_err());
         }
 
         #[test]
         fn test_password_parse_error_too_long() {
             let password_str = "a".repeat(65);
-            let password = Password::parse(password_str, None, None);
+            let password = Password::parse(password_str, None);
             assert!(password.is_err());
-        }
-
-        #[test]
-        fn test_password_parse_error_password_confirmation_mismatch() {
-            let password = Password::parse(
-                "Hello@Wor1d".to_string(),
-                None,
-                Some(&Password("Hello".to_string())),
-            );
-            assert!(password.is_err());
-        }
-
-        #[test]
-        fn test_password_parse_error_password_confirmation_match() {
-            let password = Password::parse(
-                "Hello@Wor1d".to_string(),
-                None,
-                Some(&Password("Hello@Wor1d".to_string())),
-            );
-            assert!(password.is_ok());
         }
 
         #[test]
         fn test_password_parse_error_lower_case_only() {
-            let password = Password::parse("hello@wor1d".to_string(), None, None);
+            let password = Password::parse("hello@wor1d".to_string(), None);
             assert!(password.is_err());
         }
 
         #[test]
         fn test_password_parse_error_upper_case_only() {
-            let password = Password::parse("HELLO@WOR1D".to_string(), None, None);
+            let password = Password::parse("HELLO@WOR1D".to_string(), None);
             assert!(password.is_err());
         }
 
         #[test]
         fn test_password_parse_error_special_char_only() {
-            let password = Password::parse("!@#$%^&*()".to_string(), None, None);
+            let password = Password::parse("!@#$%^&*()".to_string(), None);
             assert!(password.is_err());
         }
 
         #[test]
         fn test_password_parse_error_digit_only() {
-            let password = Password::parse("1234567890".to_string(), None, None);
+            let password = Password::parse("1234567890".to_string(), None);
             assert!(password.is_err());
+        }
+
+        #[test]
+        fn test_password_parse_error_password_confirmation_mismatch() {
+            let password = Password("match".to_string());
+            let password = password.parse_confirm("mismatch".to_string(), None);
+            assert!(password.is_err());
+        }
+
+        #[test]
+        fn test_password_parse_error_password_confirmation_match() {
+            let password = Password("match".to_string());
+            let password = password.parse_confirm("match".to_string(), None);
+            assert!(password.is_ok());
         }
     }
 }
