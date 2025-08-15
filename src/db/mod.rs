@@ -75,8 +75,8 @@ impl FromGlobalContext for SqliteClient {
     async fn from_global_context(
         dependency_global_context: &DependencyGlobalContext<'_, '_>,
     ) -> Result<Self, Report<DependencyError>> {
-        let sqlite_client = SQLITE_CLIENT
-            .get_or_try_init(async || {
+        let sqlite_client: Result<&Self, Report<DependencyError>> = SQLITE_CLIENT
+            .get_or_try_init(|| async {
                 Self::new(
                     dependency_global_context
                         .global_context
@@ -86,8 +86,8 @@ impl FromGlobalContext for SqliteClient {
                 )
                 .change_context(DependencyError::Other("Could not start SQLITE".to_string()))
             })
-            .await?;
+            .await;
 
-        Ok(sqlite_client.clone())
+        Ok(sqlite_client?.clone())
     }
 }
