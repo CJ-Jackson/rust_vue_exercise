@@ -69,13 +69,13 @@ impl Clone for SqliteClient {
     }
 }
 
-static SQLITE_CLIENT_PIN: OnceCell<SqliteClient> = OnceCell::const_new();
+static SQLITE_CLIENT: OnceCell<SqliteClient> = OnceCell::const_new();
 
 impl FromGlobalContext for SqliteClient {
     async fn from_global_context(
         dependency_global_context: &DependencyGlobalContext<'_, '_>,
     ) -> Result<Self, Report<DependencyError>> {
-        let sqlite_client = SQLITE_CLIENT_PIN
+        let sqlite_client = SQLITE_CLIENT
             .get_or_try_init(async || {
                 Self::new(
                     dependency_global_context
