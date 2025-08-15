@@ -39,7 +39,7 @@ pub struct ValidateErrorItem {
 }
 
 impl ValidateErrorItem {
-    pub fn html(&self) -> Markup {
+    pub fn as_html(&self) -> Markup {
         html! {
             ul .validation-error-list {
                 @for message in &self.messages {
@@ -54,15 +54,15 @@ trait MarkupSealed {}
 
 #[allow(private_bounds)]
 pub trait ValidationOptionMarkup: MarkupSealed {
-    fn html(&self) -> Markup;
+    fn as_html(&self) -> Markup;
 }
 
 impl MarkupSealed for Option<&ValidateErrorItem> {}
 
 impl ValidationOptionMarkup for Option<&ValidateErrorItem> {
-    fn html(&self) -> Markup {
+    fn as_html(&self) -> Markup {
         match self {
-            Some(item) => item.html(),
+            Some(item) => item.as_html(),
             None => html! {},
         }
     }

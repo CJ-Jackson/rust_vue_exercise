@@ -55,11 +55,11 @@ impl UserRegisterForm {
             h1 .mt-3 { (title) }
             form method="post" .form {
                 input .form-item type="text" name="username" placeholder="Username" value=(user_register_form.username);
-                (errors.get("username").html())
+                (errors.get("username").as_html())
                 input .form-item type="password" name="password" placeholder="Password";
-                (errors.get("password").html())
+                (errors.get("password").as_html())
                 input .form-item type="password" name="password_confirm" placeholder="Confirm password";
-                (errors.get("password_confirm").html())
+                (errors.get("password_confirm").as_html())
                 button .btn .btn-sky-blue .mt-3 type="submit" { "Register" };
             }
         })
