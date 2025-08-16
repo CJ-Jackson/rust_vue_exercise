@@ -1,7 +1,8 @@
-use crate::validation::{OptionValidateErrorItemTrait, ValidateErrorItem, ValidateErrorItemTrait};
+use crate::validation::{
+    OptionValidateErrorItemTrait, StrValidationExtension, ValidateErrorItem, ValidateErrorItemTrait,
+};
 use error_stack::Report;
 use thiserror::Error;
-use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Debug, Error)]
 #[error("Name Error")]
@@ -19,17 +20,17 @@ impl Name {
     pub fn parse(name: String, field_name: Option<String>) -> Result<Self, Report<NameError>> {
         let mut message: Vec<String> = vec![];
         let field_name = field_name.unwrap_or("name".to_string());
+        let name_validator = name.as_string_validator();
 
         let mut check_count = true;
-        name.is_empty().then(|| {
+        name_validator.is_empty().then(|| {
             message.push(format!("{} is required", &field_name));
             check_count = false;
         });
         check_count.then(|| {
-            let name_count = name.graphemes(true).count();
-            (name_count < 5)
+            (name_validator.count_graphemes() < 5)
                 .then(|| message.push(format!("{} must be at least 5 characters", &field_name)));
-            (name_count > 20)
+            (name_validator.count_graphemes() > 20)
                 .then(|| message.push(format!("{} must be at most 20 characters", &field_name)));
         });
 
@@ -62,17 +63,17 @@ impl Description {
     ) -> Result<Self, Report<DescriptionError>> {
         let mut message: Vec<String> = vec![];
         let field_name = field_name.unwrap_or("description".to_string());
+        let description_validator = description.as_string_validator();
 
         let mut check_count = true;
-        description.is_empty().then(|| {
+        description_validator.is_empty().then(|| {
             message.push(format!("{} is required", &field_name));
             check_count = false;
         });
         check_count.then(|| {
-            let description_count = description.graphemes(true).count();
-            (description_count < 5)
+            (description_validator.count_graphemes() < 5)
                 .then(|| message.push(format!("{} must be at least 5 characters", &field_name)));
-            (description_count > 100)
+            (description_validator.count_graphemes() > 100)
                 .then(|| message.push(format!("{} must be at most 100 characters", &field_name)));
         });
 

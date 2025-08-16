@@ -3,7 +3,6 @@ use crate::validation::{
 };
 use error_stack::Report;
 use thiserror::Error;
-use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Debug, Error)]
 #[error("Username is invalid")]
@@ -26,21 +25,21 @@ impl Username {
         let mut message: Vec<String> = vec![];
         let field_name = field_name.unwrap_or("username".to_string());
         let field_name_no_underscore = field_name.replace("_", " ");
+        let username_validator = username.as_string_validator();
 
         let mut check_count = true;
-        username.is_empty().then(|| {
+        username_validator.is_empty().then(|| {
             message.push(format!("{} cannot be empty", &field_name_no_underscore));
             check_count = false;
         });
         check_count.then(|| {
-            let username_count = username.graphemes(true).count();
-            (username_count < 5).then(|| {
+            (username_validator.count_graphemes() < 5).then(|| {
                 message.push(format!(
                     "{} must be at least 5 characters",
                     &field_name_no_underscore
                 ))
             });
-            (username_count > 30).then(|| {
+            (username_validator.count_graphemes() > 30).then(|| {
                 message.push(format!(
                     "{} must be at most 30 characters",
                     &field_name_no_underscore
@@ -78,39 +77,39 @@ impl Password {
         let mut message: Vec<String> = vec![];
         let field_name = field_name.unwrap_or("password".to_string());
         let field_name_no_underscore = field_name.replace("_", " ");
+        let password_validator = password.as_string_validator();
 
         let mut check_count_and_chars = true;
-        password.is_empty().then(|| {
+        password_validator.is_empty().then(|| {
             message.push(format!("{} cannot be empty", &field_name_no_underscore));
             check_count_and_chars = false;
         });
         check_count_and_chars.then(|| {
-            let password_count = password.graphemes(true).count();
-            (password_count < 8).then(|| {
+            (password_validator.count_graphemes() < 8).then(|| {
                 message.push(format!(
                     "{} must be at least 8 characters",
                     &field_name_no_underscore
                 ));
             });
-            (password_count > 64).then(|| {
+            (password_validator.count_graphemes() > 64).then(|| {
                 message.push(format!(
                     "{} must be at most 64 characters",
                     &field_name_no_underscore
                 ));
             });
-            (!password.has_ascii_uppercase_and_lowercase()).then(|| {
+            (!password_validator.has_ascii_uppercase_and_lowercase()).then(|| {
                 message.push(format!(
                     "{} must contain at least one uppercase and lowercase letter",
                     &field_name_no_underscore
                 ));
             });
-            (!password.has_special_chars()).then(|| {
+            (!password_validator.has_special_chars()).then(|| {
                 message.push(format!(
                     "{} must contain at least one special character",
                     &field_name_no_underscore
                 ));
             });
-            (!password.has_ascii_digit()).then(|| {
+            (!password_validator.has_ascii_digit()).then(|| {
                 message.push(format!(
                     "{} must contain at least one digit",
                     &field_name_no_underscore
