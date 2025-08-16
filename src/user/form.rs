@@ -15,7 +15,7 @@ pub struct UserRegisterForm {
 }
 
 impl UserRegisterForm {
-    pub fn to_validated(&self) -> Result<UserRegisterFormValidated, ValidationErrorResponse> {
+    pub fn as_validated(&self) -> Result<UserRegisterFormValidated, ValidationErrorResponse> {
         let mut builder = ValidationErrorsBuilder::new();
 
         let username = builder
