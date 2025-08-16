@@ -343,6 +343,6 @@ impl StrSealed for String {}
 
 impl StrValidationExtension for String {
     fn as_string_validator(&'_ self) -> StringValidator<'_> {
-        StringValidator::new(&self)
+        StringValidator::new(self)
     }
 }
