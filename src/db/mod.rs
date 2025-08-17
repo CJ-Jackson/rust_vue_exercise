@@ -72,7 +72,7 @@ impl<T: ConnectionMarker> SqliteClient<T> {
     }
 }
 
-impl Clone for SqliteClient {
+impl<T: ConnectionMarker> Clone for SqliteClient<T> {
     fn clone(&self) -> Self {
         Self(Arc::clone(&self.0), PhantomData)
     }
