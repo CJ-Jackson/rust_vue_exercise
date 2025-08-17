@@ -281,7 +281,7 @@ impl<'a> StringValidator<'a> {
         self.0
             .chars()
             .filter(|c| Self::SPECIAL_CHARS.contains(c))
-            .count() as usize
+            .count()
     }
 
     pub fn has_ascii_uppercase(&self) -> bool {
