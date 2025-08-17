@@ -3,9 +3,16 @@ use crate::error::{ExtraResultExt, FromIntoStackError};
 use crate::user::password::Password;
 use error_stack::{Report, ResultExt};
 use rusqlite::{Connection, named_params};
+use std::marker::PhantomData;
 use std::sync::{Arc, Mutex};
 use thiserror::Error;
 use tokio::sync::OnceCell;
+
+pub trait ConnectionMarker: Send + Sync + 'static {}
+
+pub struct DefaultConnection;
+
+impl ConnectionMarker for DefaultConnection {}
 
 #[derive(Error, Debug)]
 pub enum SqliteClientError {
@@ -19,9 +26,11 @@ pub enum SqliteClientError {
 
 impl FromIntoStackError for SqliteClientError {}
 
-pub struct SqliteClient(Arc<Mutex<Connection>>);
+pub struct SqliteClient<T = DefaultConnection>(Arc<Mutex<Connection>>, PhantomData<T>)
+where
+    T: ConnectionMarker;
 
-impl SqliteClient {
+impl<T: ConnectionMarker> SqliteClient<T> {
     pub fn new(sqlite_path: String) -> Result<Self, Report<SqliteClientError>> {
         if sqlite_path.is_empty() {
             return Err(SqliteClientError::SqliteFileEmpty
@@ -55,7 +64,7 @@ impl SqliteClient {
             .attach_critical("Failed to create default user".to_string())?;
         }
 
-        Ok(SqliteClient(Arc::new(Mutex::new(conn))))
+        Ok(SqliteClient(Arc::new(Mutex::new(conn)), PhantomData))
     }
 
     pub fn get_conn(&self) -> &Mutex<Connection> {
@@ -65,7 +74,7 @@ impl SqliteClient {
 
 impl Clone for SqliteClient {
     fn clone(&self) -> Self {
-        Self(Arc::clone(&self.0))
+        Self(Arc::clone(&self.0), PhantomData)
     }
 }
 
