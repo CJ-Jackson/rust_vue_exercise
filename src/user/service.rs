@@ -3,6 +3,7 @@ use crate::user::dependency::{DependencyUserContext, FromUserContext};
 use crate::user::model::{IdUsername, UserContext};
 use crate::user::password::Password;
 use crate::user::repository::UserRepository;
+use crate::user::validate::username::IsUsernameTaken;
 use error_stack::Report;
 use uuid::Uuid;
 
@@ -113,6 +114,14 @@ impl UserRegisterService {
 
         self.user_repository
             .register_user(username, password)
+            .is_ok()
+    }
+}
+
+impl IsUsernameTaken for UserRegisterService {
+    async fn is_username_taken(&self, username: &str) -> bool {
+        self.user_repository
+            .username_taken(username.to_string())
             .is_ok()
     }
 }

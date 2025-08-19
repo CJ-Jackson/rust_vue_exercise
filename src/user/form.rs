@@ -1,6 +1,7 @@
 use crate::html_base::ContextHtmlBuilder;
 use crate::user::model::UserRegisterFormValidated;
-use crate::user::validate::{Password, Username};
+use crate::user::validate::password::Password;
+use crate::user::validate::username::{IsUsernameTaken, Username, UsernameCheckResult};
 use crate::validation::{
     ValidateErrorItem, ValidationErrorResponse, ValidationErrorsBuilder, ValidationOptionMarkup,
 };
@@ -15,11 +16,18 @@ pub struct UserRegisterForm {
 }
 
 impl UserRegisterForm {
-    pub fn as_validated(&self) -> Result<UserRegisterFormValidated, ValidationErrorResponse> {
+    pub async fn as_validated<T: IsUsernameTaken>(
+        &self,
+        is_username_taken: &T,
+    ) -> Result<UserRegisterFormValidated, ValidationErrorResponse> {
         let mut builder = ValidationErrorsBuilder::new();
 
         let username = builder
-            .add_item_from_trait(Username::parse(self.username.clone(), None))
+            .add_item_from_trait(
+                Username::parse(self.username.clone(), None)
+                    .check_username_result(is_username_taken, None)
+                    .await,
+            )
             .unwrap_or_default();
         let password = builder
             .add_item_from_trait(Password::parse(self.password.clone(), None))

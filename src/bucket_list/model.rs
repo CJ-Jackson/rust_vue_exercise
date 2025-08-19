@@ -1,4 +1,5 @@
-use crate::bucket_list::validate::{Description, Name};
+use crate::bucket_list::validate::description::Description;
+use crate::bucket_list::validate::name::Name;
 use crate::validation::{ValidationErrorResponse, ValidationErrorsBuilder};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};

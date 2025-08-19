@@ -112,7 +112,7 @@ async fn register_post(
     user_register_service: UserDep<UserRegisterService, LoginFlag>,
     context_html_builder: UserDep<ContextHtmlBuilder>,
 ) -> RegisterPostResponse {
-    let validated_data = data.as_validated();
+    let validated_data = data.as_validated(&user_register_service.0).await;
     match validated_data {
         Ok(data) => {
             if user_register_service.0.register_user(

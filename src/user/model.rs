@@ -1,4 +1,5 @@
-use crate::user::validate::{Password, Username};
+use crate::user::validate::password::Password;
+use crate::user::validate::username::Username;
 
 #[derive(Debug)]
 pub struct UserContext {

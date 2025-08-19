@@ -156,6 +156,33 @@ impl UserRepository {
 
         Ok(())
     }
+
+    pub fn username_taken(&self, username: String) -> Result<bool, Report<UserRepositoryError>> {
+        let conn = self
+            .sqlite_client
+            .get_conn()
+            .lock()
+            .map_err(|_| Report::new(UserRepositoryError::LockError))?;
+
+        let mut stmt = conn
+            .prepare(include_str!("_sql/username_taken.sql"))
+            .change_context(UserRepositoryError::QueryError)?;
+
+        let mut item_iter = stmt
+            .query_map(
+                named_params! {
+                    ":username": username,
+                },
+                |row| Ok(row.get("taken")?),
+            )
+            .change_context(UserRepositoryError::QueryError)?;
+
+        let item = item_iter
+            .next()
+            .ok_or_else(|| Report::new(UserRepositoryError::NotFoundError))?;
+
+        item.change_context(UserRepositoryError::RowValueError)
+    }
 }
 
 impl FromGlobalContext for UserRepository {
